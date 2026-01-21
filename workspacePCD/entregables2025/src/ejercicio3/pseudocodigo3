@@ -1,0 +1,197 @@
+Alejandro Hervas Tortosa
+Isaac Gomez Gonzalez
+
+
+
+Monitor Lavadero {
+	int NUM_ZONAS_DE_LAVADO = 4;
+	int ZONA_DE_LAVADO_ELEGIDA = 1;
+
+	Condition colasDeZonasDeLavado[NUM_ZONAS_DE_LAVADO]; // Array en el que hay una cola(condition) para cada zona de lavado
+	boolean lavaderosLibres[NUM_ZONAS_DE_LAVADO];	     // Array de booleanos que indica que lavaderos se encuentran libres
+	int tiemposColasZonasDeLavado[NUM_ZONAS_DE_LAVADO];  // Es un array con los tiempos de espera de cada lavadero
+
+	public Lavadero() {
+
+		for (int i = 0; i < NUM_ZONAS_DE_LAVADO; i++) {
+			lavaderosLibres[i] = true;
+			tiemposColasZonasDeLavado[i] = 0;
+		}
+	}
+
+	
+
+	/**
+	 * Función que se encarga de darnos una zona para lavar el coche en el lavadero.
+	 * 
+	 * @param tiempoDeLavado Es el tiempo que tardaremos en dejar libre la zona de
+	 *                       lavado.
+	 * @return Array que en la primera posición tiene la zona de lavado que se nos
+	 *         ha dado y en las siguientes posiciones los tiempos de cada zona de
+	 *         lavado.
+	 */
+	public int[] pedirZonaDeLavado(int tiempoDeLavado) {
+		int zonaDeLavadoYTiempos[ZONA_DE_LAVADO_ELEGIDA + NUM_ZONAS_DE_LAVADO];
+		zonaDeLavadoYTiempos[0] = 0;
+		for (int i = 0; i < NUM_ZONAS_DE_LAVADO; i++) {
+			// En esta condición se guarda zona de lavado con menor tiempo en la primera
+			// posicion del array que se devuelve
+			if (tiemposColasZonasDeLavado[i] < tiemposColasZonasDeLavado[zonaDeLavadoYTiempos[0]]) {
+				zonaDeLavadoYTiempos[0] = i;
+			}
+			// Se van guardando los tiempos de todas las zonas de lavado antes de incluir el
+			// tiempo de la que elijamos
+			zonaDeLavadoYTiempos[ZONA_DE_LAVADO_ELEGIDA + i] = tiemposColasZonasDeLavado[i];
+		}
+
+		// Al tiempo de la cola elegida se le suma el tiempo del cliente nuevo que ha
+		// entrado
+		tiemposColasZonasDeLavado[zonaDeLavadoYTiempos[0]] += tiempoDeLavado;
+
+		return zonaDeLavadoYTiempos; // Este array a sido formado antes de incluir el tiempo del nuevo cliente
+	
+	}
+
+	/**
+	 * Método para esperar nuestro turno de lavado en nuestra cola elegida
+	 * 
+	 * @param zonaDeLavadoElegida Es necesario este parametro para saber que zona de
+	 *                            lavado emos elegido
+	 */
+	public void empezarLavado(int zonaDeLavadoElegida) 
+		while (!lavaderosLibres[zonaDeLavadoElegida]) {
+			colasDeZonasDeLavado[zonaDeLavadoElegida].delay();
+		}
+		lavaderosLibres[zonaDeLavadoElegida] = false;
+	}
+
+	/**
+	 * Método para dejar nuestra zona de lavado libre para que otro entre
+	 * 
+	 * @param zonaDeLavadoElegida Es la zona de lavado que vamos a liberar
+	 * @param tiempoDeLavado      Es nuestro tiempo de lavado, el cual se le debe de
+	 *                            restar al tiempo total de la cola en la que
+	 *                            estabamos
+	 */
+	public void terminarLavado(int zonaDeLavadoElegida, int tiempoDeLavado) {
+		lavaderosLibres[zonaDeLavadoElegida] = true;
+		tiemposColasZonasDeLavado[zonaDeLavadoElegida] -= tiempoDeLavado;
+		colasDeZonasDeLavado[zonaDeLavadoElegida].resume();
+	}
+
+}
+
+Monitor Maquina {
+	
+	int NUM_MAQUINAS = 3;
+	
+	int numMaquinasOcupadas = 0; // Número de máquinas ocupadas 
+	Condition colaBuscarMaquina; // Una cola(condition) de los procesos que no han podido encontrar máquinas libres
+	boolean maquinasLibres[NUM_MAQUINAS] ; // Array de booleanos para indicar que máquinas estan libres
+	
+	public Maquina() {
+		for (int i = 0; i < NUM_MAQUINAS; i++) {
+			this.maquinasLibres[i] = true;
+		}
+	}
+	
+	/**
+	 * Función para obtener una de las máquinas cuando queden libres.
+	 * 
+	 * @return Devuelve el número de la máquina que se a elegido.
+	 */
+	public int pedirMaquina() {
+		// En este bucle solo se entrará y se permanecerá mientras no hallan máquinas
+		// disponibles
+		while (numMaquinasOcupadas >= NUM_MAQUINAS) {
+			colaBuscarMaquina.delay();
+		}
+		int maquinaSeleccionada = 0;
+		while (!maquinasLibres[maquinaSeleccionada]) {
+			maquinaSeleccionada++;
+		}
+		maquinasLibres[maquinaSeleccionada] = false; // Dejo ocupada la máquina que he elegido
+		numMaquinasOcupadas++; // Le sumo uno al número de máquinas ocupadas
+		return maquinaSeleccionada; // Devuelvo el número de la máquina seleccionada
+	}
+
+	/**
+	 * Método que se encarga de liberar una máquina que alguien ya ha terminado de
+	 * usar
+	 * 
+	 * @param maquinaParaLiberar Es el identificador de la máquina que se va ha
+	 *                           dejar libre
+	 */
+	public void liberarMaquina(int maquinaParaLiberar) {
+		maquinasLibres[maquinaParaLiberar] = true;
+		numMaquinasOcupadas--;
+		colaBuscarMaquina.resume();
+	}
+}
+
+Monitor Pantalla{
+	cond colaPantalla;
+	bool pantallaLibre;
+		/**
+	 * Método que mantendra la pantalla bloqueada mientras este en uso por un
+	 * proceso
+	 */
+	void cogerPantalla() {
+		
+			while (!pantallaLibre) {	
+				colaPantalla.delay();
+			}
+			pantallaLibre = false;
+	
+	}
+
+	/**
+	 * Método para desbloquear la pantalla cuando ya no la este usando un proceso
+	 */
+	public void dejarPantalla() {
+		pantallaLibre = true;
+		colaPantalla.resume();
+		
+
+	}
+
+}
+
+
+
+Proceso cliente() {
+	int TIEMPO_EN_MAQUINA_MAX = 5000; 	// Variable para limitar el tiempo máximo en el uso de las máquinas
+	int TIEMPO_DE_LAVADO_MAX = 10000; 	// Variable para limitar el tiempo máximo en el tiempo de lavado
+	int Xi=aleatorio(TIEMPO_EN_MAQUINA_MAX); // Tiempo que se tarda en usar la máquina
+	int Yi=aleatorio(TIEMPO_DE_LAVADO_MAX); // Tiempo para hacer el lavado
+	int idCliente; 				//identificador del cliente
+	
+	
+	int maquinaQueUso = Maquina.pedirMaquina();
+	dormir(Xi);
+	Maquina.liberarMaquina(maquinaQueUso);
+
+	int zonaYTiempos[] = Lavadero.pedirZonaDeLavado(this.Yi);
+	Pantalla.cogerPantalla();
+	imprimir("--------------------------------------------------------------");
+	imprimir("\"Cliente " + this.idCliente + " ha solicitado su servicio en la máquina: " + (maquinaQueUso + Main.EMPEZAR_EN_UNO));
+	imprimir("Tiempo en solicitar el servicio: " + this.Xi);
+	imprimir("El coche será lavado en el lavadero nº: " + (zonaYTiempos[0] + 1));
+	imprimir("Tiempo en lavar el coche= " + this.Yi);
+	imprimir("Tiempo de espera en lavadero1=" + zonaYTiempos[1] + ",lavadero2=" + zonaYTiempos[2] + ",lavadero3=" + zonaYTiempos[3] + ",lavadero4=" + zonaYTiempos[4]);
+	imprimir("--------------------------------------------------------------");
+	Pantalla.dejarPantalla();	
+	Lavadero.empezarLavado(zonaYTiempos[0]);
+	dormir(yi)
+	Lavadero.terminarLavado(zonaYTiempos[0], this.Yi);
+}
+
+
+
+
+
+
+
+
+
+
