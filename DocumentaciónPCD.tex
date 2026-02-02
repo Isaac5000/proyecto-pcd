@@ -1,15 +1,44 @@
 \documentclass[a4paper,12pt,titlepage,twoside]{article}
 
 % --- Preámbulo (Configuración) ---
-\usepackage[spanish,es-noindentfirst]{babel}    % Configura el idioma a español y evita sangrado en el primer párrafo
-\usepackage[utf8]{inputenc}     % Permite el uso de tildes y caracteres especiales
-\usepackage[T1]{fontenc}        % Mejora la codificación de fuentes de salida
-\usepackage{setspace}           % Paquete para controlar el interlineado
-\usepackage{lmodern}            % Fuente tipográfica más nítida que la estándar
+\usepackage[spanish,es-noindentfirst]{babel}                % Configura el idioma a español y evita sangrado en el primer párrafo
+\usepackage[utf8]{inputenc}                                 % Permite el uso de tildes y caracteres especiales
+\usepackage[T1]{fontenc}                                    % Mejora la codificación de fuentes de salida
+\usepackage{setspace}                                       % Paquete para controlar el interlineado
+\usepackage{lmodern}                                        % Fuente tipográfica más nítida que la estándar
+\usepackage{newtxtext,newtxmath}                            % Usa la fuente Times New Roman
+\usepackage{courier}                                        % Carga la fuente Courier
+\usepackage{listings}                                       % Para que el código se vea profesional
+\usepackage[spanish,onelanguage,ruled,vlined]{algorithm2e}  % Paquete para pseudocódigo
 
+
+% Configuración para los bloques de código (listings)
+\lstset{
+    language=Java,
+    basicstyle=\small\ttfamily, % ttfamily usará Courier ahora
+    columns=fullflexible,
+    keepspaces=true,
+    extendedchars=true,
+    literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1,
+    title=\lstname
+}
+
+% Configuración para el pseudocódigo (algorithm2e)
+% Forzamos a que el texto del algoritmo y las palabras clave usen Courier
+\SetAlFnt{\small\ttfamily}
+\SetAlCapFnt{\small\ttfamily}
+\SetAlCapNameFnt{\small\ttfamily}
+\SetKwSty{ttfamily}
+
+% Configuración para el idioma español en listings
+\lstset{
+    language=Java,
+    extendedchars=true,
+    literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 % Para que soporte acentos en comentarios
+}
 
 \title{Documentación Proyecto PCD}
-\author{Sí}
+\author{Sí\and{}No}
 
 \begin{document}
 \singlespacing  % Establece interlineado sencillo
@@ -21,8 +50,40 @@
 \subsection{Recursos no compartibles}
 \subsection{Condiciones de sincronización}
 \subsection{Pseudocódigo comentado}
+
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \KwIn{Datos de usuario} % O usa \Entrada{...}
+    \KwOut{Resultado de validación} % O usa \Salida{...}
+    \BlankLine
+    \For{int $i = 0$; $i < n$; $i++$}{
+    proceso(i)\;
+    }
+    \If{usuario\_existe}{
+        Imprimir("Bienvenido")\;
+    }
+    \Else{
+        Imprimir("Error")\;
+    }
+    \caption{Pseudocódigo de validación de acceso.}
+\end{algorithm}
+
 \subsection{Cuestiones planteadas en los ejercicios}
 \subsection{Código Java de los ejercicios comentado}
+\begin{lstlisting}[language=Java, title={Clase X}]
+class X {
+    private ReentrantLock lock = new ReentrantLock();
+
+    public void metodoCritico() {
+        lock.lock();
+        try {
+            // Seccion critica
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+\end{lstlisting}
 
 \newpage
 \section{Ejercicio 2: Semáforos}
