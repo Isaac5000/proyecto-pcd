@@ -44,8 +44,8 @@ public class Main {
 	
 	
 	public static void main(String[] args) {
-		Cuadrado cuadrado = new Cuadrado();
-		Suma suma = new Suma();
+		CuadradoMatriz cuadrado = new CuadradoMatriz();
+		SumaMatriz suma = new SumaMatriz();
 		cuadrado.start();
 		suma.start();
 		

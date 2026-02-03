@@ -2,7 +2,7 @@ package ejercicio1;
 
 import ejercicio1.Main;
 
-public class Cuadrado extends Thread {
+public class CuadradoMatriz extends Thread {
 
 	@Override
 	public void run() {

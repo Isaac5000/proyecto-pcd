@@ -1,6 +1,6 @@
 package ejercicio1;
 
-public class Suma extends Thread{
+public class SumaMatriz extends Thread{
 	
 	@Override
 	public void run() {

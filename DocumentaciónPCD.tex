@@ -19,6 +19,7 @@
     columns=fullflexible,
     keepspaces=true,
     extendedchars=true,
+    % Para que soporte acentos en comentarios
     literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1,
     title=\lstname
 }
@@ -30,12 +31,6 @@
 \SetAlCapNameFnt{\small\ttfamily}
 \SetKwSty{ttfamily}
 
-% Configuración para el idioma español en listings
-\lstset{
-    language=Java,
-    extendedchars=true,
-    literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 % Para que soporte acentos en comentarios
-}
 
 \title{Documentación Proyecto PCD}
 \author{Sí\and{}No}
@@ -52,11 +47,14 @@
 \subsection{Pseudocódigo comentado}
 
 \begin{algorithm}[H]
+    \title{Clase CuadradoMatriz}
+    \newline
+    \BlankLine
     \SetAlgoLined
     \KwIn{Datos de usuario} % O usa \Entrada{...}
     \KwOut{Resultado de validación} % O usa \Salida{...}
     \BlankLine
-    \For{int $i = 0$; $i < n$; $i++$}{
+    \For{$i \leftarrow 1$ \KwTo $n$}{
     proceso(i)\;
     }
     \If{usuario\_existe}{
@@ -65,7 +63,6 @@
     \Else{
         Imprimir("Error")\;
     }
-    \caption{Pseudocódigo de validación de acceso.}
 \end{algorithm}
 
 \subsection{Cuestiones planteadas en los ejercicios}
@@ -84,6 +81,7 @@ class X {
     }
 }
 \end{lstlisting}
+
 
 \newpage
 \section{Ejercicio 2: Semáforos}
