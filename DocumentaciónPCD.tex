@@ -30,7 +30,7 @@
 \SetAlCapFnt{\small\ttfamily}
 \SetAlCapNameFnt{\small\ttfamily}
 \SetKwSty{ttfamily}
-
+\SetKwProg{Fn}{Función}{}{fin}
 
 \title{Documentación Proyecto PCD}
 \author{Sí\and{}No}
@@ -45,41 +45,146 @@
 \subsection{Recursos no compartibles}
 \subsection{Condiciones de sincronización}
 \subsection{Pseudocódigo comentado}
+\begin{algorithm}[H]
+    \TitleOfAlgo{Clase Main}
+    \DontPrintSemicolon
+
+    \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+    \SetKwData{NumOperaciones}{NUM_OPERACIONES}
+    \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
+    \SetKwData{NumRango}{NUM_0_9}
+    \SetKwData{OpcionA}{OPCION_A}
+    \SetKwData{OpcionR}{OPCION_R}
+
+    \SetKwFunction{GenerarMatriz}{generarMatriz}
+    \SetKwFunction{MatrizToString}{matrizToString}
+    \SetKwFunction{Initial}{initial}
+
+    \SetAlgoLined
+    \tcp{Variables globales}
+    \KwData{\\
+            $cerrojoPantalla : Cerrojo$\\
+            $NUM\_OPERACIONES : Entero$\\
+            $LONGITUD\_FILAS\_Y\_COLUMNAS : Entero$\\
+            $NUM\_0\_9 : Entero$\\
+            $OPCION\_A : Caracter$\\
+            $OPCION\_R : Caracter$\\
+    } 
+    \BlankLine 
+    \tcp{Inicialización de variables globales}
+    $NUM\_OPERACIONES \leftarrow 10$\;
+    $LONGITUD\_FILAS\_Y\_COLUMNAS \leftarrow 3$\;
+    $NUM\_0\_9 \leftarrow 10$\;
+    $OPCION\_A \leftarrow 'a'$\;
+    $OPCION\_R \leftarrow 'r'$\;
+    \BlankLine
+
+    \Fn{main()}{
+        \Initial(\CerrojoPantalla, $1$)\;
+        \tcp{Creación y arraque de 2 hilos} 
+        \tcp{Uno para SumaMatriz y otro para CuadradoMatriz}\; 
+    }
+
+\end{algorithm}
+
 
 \begin{algorithm}[H]
-    \title{Clase CuadradoMatriz}
-    \newline
-    \BlankLine
+    \TitleOfAlgo{Clase SumaMatriz}
+    \DontPrintSemicolon
+
+    \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
+    \SetKwData{ImpactoAcumulado}{impactoAcumulado}
+    \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+    \SetKwData{NumOperaciones}{NUM_OPERACIONES}
+    \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
+    \SetKwData{NumRango}{NUM_0_9}
+    \SetKwData{OpcionA}{OPCION_A}
+    \SetKwData{OpcionR}{OPCION_R}
+
+    \SetKwFunction{Run}{run}
+    \SetKwFunction{GenerarMatriz}{generarMatriz}
+    \SetKwFunction{MatrizToString}{matrizToString}
+    \SetKwFunction{Wait}{wait}
+    \SetKwFunction{Signal}{signal}
+
     \SetAlgoLined
-    \KwIn{Datos de usuario} % O usa \Entrada{...}
-    \KwOut{Resultado de validación} % O usa \Salida{...}
+    \tcp{Variables de instancia}
+    \KwData{\\
+            $metricasDeEntrenamiento : Matriz[][]$\\
+            $impactoAcumulado : Matriz[][]$\\
+            $metricasDeEntrenamientoCadena : Cadena$\\
+            $impactoAcumuladoCadena : Cadena$\\
+    }
     \BlankLine
-    \For{$i \leftarrow 1$ \KwTo $n$}{
-    proceso(i)\;
+    \Fn{\Run()}{
+        \For{$i \leftarrow 1$ \KwTo $NUM\_OPERACIONES$}{
+            \GenerarMatriz(\MetricasDeEntrenamiento)\;
+            \BlankLine
+            \tcp{Calcular suma de matrices}
+            \tcp{Guardar resultado en impactoAcumulado}\;
+            \BlankLine
+            metricasDeEntrenamientoCadena $\leftarrow$ \MatrizToString($metricasDeEntrenamiento$, $OPCION\_A$)\;
+            impactoAcumuladoCadena $\leftarrow$ \MatrizToString($impactoAcumulado$, $OPCION\_R$)\;
+            \BlankLine
+            \Wait{\CerrojoPantalla}\;
+            \tcp{Impresión en pantalla de las matrices}
+            \Signal{\CerrojoPantalla}\;
+
+        }
     }
-    \If{usuario\_existe}{
-        Imprimir("Bienvenido")\;
+\end{algorithm}
+
+\begin{algorithm}[H]
+    \TitleOfAlgo{Clase SumaMatriz}
+    \DontPrintSemicolon
+
+    \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
+    \SetKwData{ImpactoAcumulado}{impactoAcumulado}
+    \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+    \SetKwData{NumOperaciones}{NUM_OPERACIONES}
+    \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
+    \SetKwData{NumRango}{NUM_0_9}
+    \SetKwData{OpcionA}{OPCION_A}
+    \SetKwData{OpcionR}{OPCION_R}
+
+    \SetKwFunction{Run}{run}
+    \SetKwFunction{GenerarMatriz}{generarMatriz}
+    \SetKwFunction{MatrizToString}{matrizToString}
+    \SetKwFunction{Wait}{wait}
+    \SetKwFunction{Signal}{signal}
+
+    \SetAlgoLined
+    \tcp{Variables de instancia}
+    \KwData{\\
+            $metricasDeEntrenamiento : Matriz[][]$\\
+            $impactoAcumulado : Matriz[][]$\\
+            $metricasDeEntrenamientoCadena : Cadena$\\
+            $impactoAcumuladoCadena : Cadena$\\
     }
-    \Else{
-        Imprimir("Error")\;
+    \BlankLine
+    \Fn{\Run()}{
+        \For{$i \leftarrow 1$ \KwTo $NUM\_OPERACIONES$}{
+            \GenerarMatriz(\MetricasDeEntrenamiento)\;
+            \BlankLine
+            \tcp{Calcular suma de matrices}
+            \tcp{Guardar resultado en impactoAcumulado}\;
+            \BlankLine
+            metricasDeEntrenamientoCadena $\leftarrow$ \MatrizToString($metricasDeEntrenamiento$, $OPCION\_A$)\;
+            impactoAcumuladoCadena $\leftarrow$ \MatrizToString($impactoAcumulado$, $OPCION\_R$)\;
+            \BlankLine
+            \Wait{\CerrojoPantalla}\;
+            \tcp{Impresión en pantalla de las matrices}
+            \Signal{\CerrojoPantalla}\;
+
+        }
     }
+
 \end{algorithm}
 
 \subsection{Cuestiones planteadas en los ejercicios}
 \subsection{Código Java de los ejercicios comentado}
 \begin{lstlisting}[language=Java, title={Clase X}]
-class X {
-    private ReentrantLock lock = new ReentrantLock();
 
-    public void metodoCritico() {
-        lock.lock();
-        try {
-            // Seccion critica
-        } finally {
-            lock.unlock();
-        }
-    }
-}
 \end{lstlisting}
 
 
