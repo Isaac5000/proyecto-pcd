@@ -1,21 +1,33 @@
-\documentclass[a4paper,12pt,titlepage,twoside]{article}
+\documentclass[a4paper,12pt,titlepage,oneside]{article}
 
 % --- Preámbulo (Configuración) ---
+% Configuración de idioma y codificación
 \usepackage[spanish,es-noindentfirst]{babel}                % Configura el idioma a español y evita sangrado en el primer párrafo
 \usepackage[utf8]{inputenc}                                 % Permite el uso de tildes y caracteres especiales
 \usepackage[T1]{fontenc}                                    % Mejora la codificación de fuentes de salida
+% Configuración de la letra y el interlineado
 \usepackage{setspace}                                       % Paquete para controlar el interlineado
 \usepackage{lmodern}                                        % Fuente tipográfica más nítida que la estándar
 \usepackage{newtxtext,newtxmath}                            % Usa la fuente Times New Roman
 \usepackage{courier}                                        % Carga la fuente Courier
+\usepackage[hidelinks]{hyperref}                            % Para en el indice del PDF 
+\usepackage{fancyhdr}                                       % Para que el encabezado se vea profesional
+\usepackage{enumitem}                                       % Para personalizar listas
+% Configuración del código y pseudocódigo
 \usepackage{listings}                                       % Para que el código se vea profesional
 \usepackage[spanish,onelanguage,ruled,vlined]{algorithm2e}  % Paquete para pseudocódigo
+
+
+% Para que el compilador se calle
+\raggedbottom                                               % Quito el aviso Underfull \vbox 
+\setlength{\headheight}{15pt}                               % Ajusta la altura del encabezado para evitar advertencias
+\addtolength{\topmargin}{-3pt}                              % Ajusta el margen superior para evitar advertencias
 
 
 % Configuración para los bloques de código (listings)
 \lstset{
     language=Java,
-    basicstyle=\small\ttfamily, % ttfamily usará Courier ahora
+    basicstyle=\small\ttfamily,                             % ttfamily usará Courier ahora
     columns=fullflexible,
     keepspaces=true,
     extendedchars=true,
@@ -32,168 +44,235 @@
 \SetKwSty{ttfamily}
 \SetKwProg{Fn}{Función}{}{fin}
 
-\title{Documentación Proyecto PCD}
-\author{Sí\and{}No}
+
+% Configuración del encabezado
+\pagestyle{fancy}
+\fancyhf{}                                                                      % Borra cabecera y pie actuales  
+\fancyhead[R]{Programación concurrente y distribuida. Convocatoria 2025-2026}   % Texto a la derecha
+\fancyfoot[C]{\thepage}                                                         % Número de página en el centro del pie
+\renewcommand{\headrulewidth}{0.4pt}                                            % Línea decorativa bajo el encabezado
+
+
 
 \begin{document}
 \singlespacing  % Establece interlineado sencillo
-\maketitle
+
+\begin{titlepage}
+    \thispagestyle{empty} % Fuerza a que esta página no tenga encabezado ni número
+    % --- Bloque superior derecha ---
+    \begin{flushright}
+        \textbf{Apellidos:} \\
+        \textbf{Nombre:} \\
+        \textbf{Asignatura:} Programación de Concurrencia y Distribuida \\
+        \textbf{Grupo:}  \quad \textbf{Subgrupo:}  \\
+        \textbf{Convocatoria:}  \\
+        \textbf{Año académico:} 2025--2026 \\
+        \textbf{Profesor:} 
+    \end{flushright}
+
+    \vspace{4cm}
+
+    % --- Título Central (Opcional) ---
+    \begin{center}
+        \huge \textbf{MEMORIA DE PRÁCTICAS} \\
+        \vspace{1cm}
+        \Large Título del Proyecto 
+    \end{center}
+
+    \vfill
+\end{titlepage}
+
 \tableofcontents  % Genera el índice
 \newpage
+
 
 \section{Ejercicio 1: ReentrantLock}
 \subsection{Recursos no compartibles}
 \subsection{Condiciones de sincronización}
 \subsection{Pseudocódigo comentado}
-\begin{algorithm}[H]
-    \TitleOfAlgo{Clase Main}
-    \DontPrintSemicolon
+    \begin{algorithm}[H]
+        \TitleOfAlgo{Clase Main}
+        \DontPrintSemicolon
 
-    \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-    \SetKwData{NumOperaciones}{NUM_OPERACIONES}
-    \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
-    \SetKwData{NumRango}{NUM_0_9}
-    \SetKwData{OpcionA}{OPCION_A}
-    \SetKwData{OpcionR}{OPCION_R}
+        \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+        \SetKwData{NumOperaciones}{NUM_OPERACIONES}
+        \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
+        \SetKwData{NumRango}{NUM_0_9}
+        \SetKwData{OpcionA}{OPCION_A}
+        \SetKwData{OpcionR}{OPCION_R}
 
-    \SetKwFunction{GenerarMatriz}{generarMatriz}
-    \SetKwFunction{MatrizToString}{matrizToString}
-    \SetKwFunction{Initial}{initial}
+        \SetKwFunction{GenerarMatriz}{generarMatriz}
+        \SetKwFunction{MatrizToString}{matrizToString}
+        \SetKwFunction{Initial}{initial}
 
-    \SetAlgoLined
-    \tcp{Variables globales}
-    \KwData{\\
-            $cerrojoPantalla : Cerrojo$\\
-            $NUM\_OPERACIONES : Entero$\\
-            $LONGITUD\_FILAS\_Y\_COLUMNAS : Entero$\\
-            $NUM\_0\_9 : Entero$\\
-            $OPCION\_A : Caracter$\\
-            $OPCION\_R : Caracter$\\
-    } 
-    \BlankLine 
-    \tcp{Inicialización de variables globales}
-    $NUM\_OPERACIONES \leftarrow 10$\;
-    $LONGITUD\_FILAS\_Y\_COLUMNAS \leftarrow 3$\;
-    $NUM\_0\_9 \leftarrow 10$\;
-    $OPCION\_A \leftarrow 'a'$\;
-    $OPCION\_R \leftarrow 'r'$\;
-    \BlankLine
+        \SetAlgoLined
+        \tcp{Variables globales}
+        \KwData{\\
+                $cerrojoPantalla : Cerrojo$\\
+                $NUM\_OPERACIONES : Entero$\\
+                $LONGITUD\_FILAS\_Y\_COLUMNAS : Entero$\\
+                $NUM\_0\_9 : Entero$\\
+                $OPCION\_A : Caracter$\\
+                $OPCION\_R : Caracter$\\
+        } 
+        \BlankLine 
+        \tcp{Inicialización de variables globales}
+        $NUM\_OPERACIONES \leftarrow 10$\;
+        $LONGITUD\_FILAS\_Y\_COLUMNAS \leftarrow 3$\;
+        $NUM\_0\_9 \leftarrow 10$\;
+        $OPCION\_A \leftarrow 'a'$\;
+        $OPCION\_R \leftarrow 'r'$\;
+        \BlankLine
 
-    \Fn{main()}{
-        \Initial(\CerrojoPantalla, $1$)\;
-        \tcp{Creación y arraque de 2 hilos} 
-        \tcp{Uno para SumaMatriz y otro para CuadradoMatriz}\; 
-    }
-
-\end{algorithm}
-
-
-\begin{algorithm}[H]
-    \TitleOfAlgo{Clase SumaMatriz}
-    \DontPrintSemicolon
-
-    \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
-    \SetKwData{ImpactoAcumulado}{impactoAcumulado}
-    \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-    \SetKwData{NumOperaciones}{NUM_OPERACIONES}
-    \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
-    \SetKwData{NumRango}{NUM_0_9}
-    \SetKwData{OpcionA}{OPCION_A}
-    \SetKwData{OpcionR}{OPCION_R}
-
-    \SetKwFunction{Run}{run}
-    \SetKwFunction{GenerarMatriz}{generarMatriz}
-    \SetKwFunction{MatrizToString}{matrizToString}
-    \SetKwFunction{Wait}{wait}
-    \SetKwFunction{Signal}{signal}
-
-    \SetAlgoLined
-    \tcp{Variables de instancia}
-    \KwData{\\
-            $metricasDeEntrenamiento : Matriz[][]$\\
-            $impactoAcumulado : Matriz[][]$\\
-            $metricasDeEntrenamientoCadena : Cadena$\\
-            $impactoAcumuladoCadena : Cadena$\\
-    }
-    \BlankLine
-    \Fn{\Run()}{
-        \For{$i \leftarrow 1$ \KwTo $NUM\_OPERACIONES$}{
-            \GenerarMatriz(\MetricasDeEntrenamiento)\;
-            \BlankLine
-            \tcp{Calcular suma de matrices}
-            \tcp{Guardar resultado en impactoAcumulado}\;
-            \BlankLine
-            metricasDeEntrenamientoCadena $\leftarrow$ \MatrizToString($metricasDeEntrenamiento$, $OPCION\_A$)\;
-            impactoAcumuladoCadena $\leftarrow$ \MatrizToString($impactoAcumulado$, $OPCION\_R$)\;
-            \BlankLine
-            \Wait{\CerrojoPantalla}\;
-            \tcp{Impresión en pantalla de las matrices}
-            \Signal{\CerrojoPantalla}\;
-
+        \Fn{main()}{
+            \Initial(\CerrojoPantalla, $1$)\;
+            \tcp{Creación y arraque de 2 hilos} 
+            \tcp{SumaMatriz y CuadradoMatriz}\; 
         }
-    }
-\end{algorithm}
 
-\begin{algorithm}[H]
-    \TitleOfAlgo{Clase SumaMatriz}
-    \DontPrintSemicolon
+    \end{algorithm}
 
-    \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
-    \SetKwData{ImpactoAcumulado}{impactoAcumulado}
-    \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-    \SetKwData{NumOperaciones}{NUM_OPERACIONES}
-    \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
-    \SetKwData{NumRango}{NUM_0_9}
-    \SetKwData{OpcionA}{OPCION_A}
-    \SetKwData{OpcionR}{OPCION_R}
 
-    \SetKwFunction{Run}{run}
-    \SetKwFunction{GenerarMatriz}{generarMatriz}
-    \SetKwFunction{MatrizToString}{matrizToString}
-    \SetKwFunction{Wait}{wait}
-    \SetKwFunction{Signal}{signal}
+    \begin{algorithm}[H]
+        \TitleOfAlgo{Clase SumaMatriz}
+        \DontPrintSemicolon
 
-    \SetAlgoLined
-    \tcp{Variables de instancia}
-    \KwData{\\
-            $metricasDeEntrenamiento : Matriz[][]$\\
-            $impactoAcumulado : Matriz[][]$\\
-            $metricasDeEntrenamientoCadena : Cadena$\\
-            $impactoAcumuladoCadena : Cadena$\\
-    }
-    \BlankLine
-    \Fn{\Run()}{
-        \For{$i \leftarrow 1$ \KwTo $NUM\_OPERACIONES$}{
-            \GenerarMatriz(\MetricasDeEntrenamiento)\;
-            \BlankLine
-            \tcp{Calcular suma de matrices}
-            \tcp{Guardar resultado en impactoAcumulado}\;
-            \BlankLine
-            metricasDeEntrenamientoCadena $\leftarrow$ \MatrizToString($metricasDeEntrenamiento$, $OPCION\_A$)\;
-            impactoAcumuladoCadena $\leftarrow$ \MatrizToString($impactoAcumulado$, $OPCION\_R$)\;
-            \BlankLine
-            \Wait{\CerrojoPantalla}\;
-            \tcp{Impresión en pantalla de las matrices}
-            \Signal{\CerrojoPantalla}\;
+        \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
+        \SetKwData{ImpactoAcumulado}{impactoAcumulado}
+        \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+        \SetKwData{NumOperaciones}{NUM_OPERACIONES}
+        \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
+        \SetKwData{NumRango}{NUM_0_9}
+        \SetKwData{OpcionA}{OPCION_A}
+        \SetKwData{OpcionR}{OPCION_R}
 
+        \SetKwFunction{Run}{run}
+        \SetKwFunction{GenerarMatriz}{generarMatriz}
+        \SetKwFunction{MatrizToString}{matrizToString}
+        \SetKwFunction{Wait}{wait}
+        \SetKwFunction{Signal}{signal}
+
+        \SetAlgoLined
+        \tcp{Variables de instancia}
+        \KwData{\\
+                $metricasDeEntrenamiento : Matriz[][]$\\
+                $impactoAcumulado : Matriz[][]$\\
+                $metricasDeEntrenamientoCadena : Cadena$\\
+                $impactoAcumuladoCadena : Cadena$\\
         }
-    }
+        \BlankLine
+        \Fn{\Run()}{
+            \For{$i \leftarrow 1$ \KwTo $NUM\_OPERACIONES$}{
+                \GenerarMatriz(\MetricasDeEntrenamiento)\;
+                \BlankLine
+                \tcp{Calcular suma de matrices}
+                \tcp{Guardar resultado en impactoAcumulado}\;
+                \BlankLine
+                metricasDeEntrenamientoCadena $\leftarrow$ \MatrizToString($metricasDeEntrenamiento$, $OPCION\_A$)\;
+                impactoAcumuladoCadena $\leftarrow$ \MatrizToString($impactoAcumulado$, $OPCION\_R$)\;
+                \BlankLine
+                \Wait{\CerrojoPantalla}\;
+                \tcp{Impresión en pantalla de las matrices}
+                \Signal{\CerrojoPantalla}\;
 
-\end{algorithm}
+            }
+        }
+    \end{algorithm}
 
+    \begin{algorithm}[H]
+        \TitleOfAlgo{Clase SumaMatriz}
+        \DontPrintSemicolon
+
+        \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
+        \SetKwData{ImpactoAcumulado}{impactoAcumulado}
+        \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+        \SetKwData{NumOperaciones}{NUM_OPERACIONES}
+        \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
+        \SetKwData{NumRango}{NUM_0_9}
+        \SetKwData{OpcionA}{OPCION_A}
+        \SetKwData{OpcionR}{OPCION_R}
+
+        \SetKwFunction{Run}{run}
+        \SetKwFunction{GenerarMatriz}{generarMatriz}
+        \SetKwFunction{MatrizToString}{matrizToString}
+        \SetKwFunction{Wait}{wait}
+        \SetKwFunction{Signal}{signal}
+
+        \SetAlgoLined
+        \tcp{Variables de instancia}
+        \KwData{\\
+                $metricasDeEntrenamiento : Matriz[][]$\\
+                $impactoAcumulado : Matriz[][]$\\
+                $metricasDeEntrenamientoCadena : Cadena$\\
+                $impactoAcumuladoCadena : Cadena$\\
+        }
+        \BlankLine
+        \Fn{\Run()}{
+            \For{$i \leftarrow 1$ \KwTo $NUM\_OPERACIONES$}{
+                \GenerarMatriz(\MetricasDeEntrenamiento)\;
+                \BlankLine
+                \tcp{Calcular suma de matrices}
+                \tcp{Guardar resultado en impactoAcumulado}\;
+                \BlankLine
+                metricasDeEntrenamientoCadena $\leftarrow$ \MatrizToString($metricasDeEntrenamiento$, $OPCION\_A$)\;
+                impactoAcumuladoCadena $\leftarrow$ \MatrizToString($impactoAcumulado$, $OPCION\_R$)\;
+                \BlankLine
+                \Wait{\CerrojoPantalla}\;
+                \tcp{Impresión en pantalla de las matrices}
+                \Signal{\CerrojoPantalla}\;
+
+            }
+        }
+
+    \end{algorithm}
 \subsection{Cuestiones planteadas en los ejercicios}
+\begin{enumerate}[label=\alph*)]
+\item \textbf{Si no usas sincronización, ¿cómo podría ser la salida por pantalla?}
+
+Como regla general, si no usas sincronización, la salida por pantalla es caótica e impredecible. En este caso, dado que ambos 
+hilos (SumaMatriz y CuadradoMatriz) están accediendo a la pantalla para imprimir sus resultados, sin sincronización podrían 
+intercalarse las impresiones de ambos hilos. Esto podría resultar en una salida mezclada donde partes de la matriz de SumaMatriz 
+se imprimen junto con partes de la matriz de CuadradoMatriz, haciendo que sea difícil o imposible entender los resultados.
+
+\noindent En el caso particular de java cada System.out.println() es una operación atómica, lo que significa que cada llamada a esta 
+función se ejecutará completamente sin ser interrumpida por otro hilo. Sin embargo, esto no garantiza que las impresiones de ambos hilos 
+no se mezclen, ya que cada hilo podría imprimir varias líneas de la matriz antes de que el otro hilo tenga la oportunidad de imprimir. 
+Por lo tanto, aunque cada línea individual se imprima de manera atómica, la secuencia completa de impresiones podría resultar en una salida 
+caótica si no se sincroniza adecuadamente.
+
+\end{enumerate}
+
 \subsection{Código Java de los ejercicios comentado}
-\begin{lstlisting}[language=Java, title={Clase X}]
+    \begin{lstlisting}[language=Java, title={Clase Main}]
 
-\end{lstlisting}
+    \end{lstlisting}
 
+    \begin{lstlisting}[language=Java, title={Clase SumaMatriz}]
+
+    \end{lstlisting}
+
+    \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
+
+    \end{lstlisting}
 
 \newpage
 \section{Ejercicio 2: Semáforos}
 \subsection{Recursos no compartibles}
 \subsection{Condiciones de sincronización}
 \subsection{Pseudocódigo comentado}
+    \begin{algorithm}
+        
+    \end{algorithm}
 \subsection{Cuestiones planteadas en los ejercicios}
+    Según las condiciones del problema:
+    \begin{enumerate}[label=\alph*)]
+        \item \textbf{(0.5 puntos sobre 10) Si consideramos un panel solamente ¿cómo es el acceso al mismo?}
+        Si consideramos los tres paneles ¿cómo es el acceso? Explica ambas situaciones.
+
+        \item \textbf{(0.5 puntos sobre 10) ¿Qué tipo de semáforos has usado para resolver el problema
+        (binarios, generales)?}
+
+    \end{enumerate}
 \subsection{Código Java de los ejercicios comentado}
 
 \newpage
@@ -201,15 +280,45 @@
 \subsection{Recursos no compartibles}
 \subsection{Condiciones de sincronización}
 \subsection{Pseudocódigo comentado}
+    \begin{algorithm}
+        
+    \end{algorithm}
 \subsection{Cuestiones planteadas en los ejercicios}
+    \begin{enumerate}[label=\alph*)]
+        \item \textbf{(0.5 puntos) Indica si la acción de entrenar es concurrente o en exclusión mutua y
+        justifica.}
+
+        \item \textbf{(0.75 puntos) ¿Qué tipo de monitor Java has usado? Justifica.}
+        
+        \item \textbf{(0.5 puntos) En el monitor, ¿has usado notify/signal o notifyAll/signalAll? Justifica}
+        
+        \item \textbf{(0.75 puntos) ¿Cómo se ha resuelto la exclusión mutua de la pantalla en este problema}
+        
+    \end{enumerate}
 \subsection{Código Java de los ejercicios comentado}
+    \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
+
+    \end{lstlisting}
 
 \newpage
 \section{Ejercicio 4: Paso de Mensajes Asíncrono}
 \subsection{Recursos no compartibles}
 \subsection{Condiciones de sincronización}
 \subsection{Pseudocódigo comentado}
+    \begin{algorithm}
+        
+    \end{algorithm}
 \subsection{Cuestiones planteadas en los ejercicios}
+    \begin{enumerate}[label=\alph*)]
+        \item \textbf{(0.5 puntos sobre 10) ¿Se pueden usar simultáneamente los dos tornos? Justifica la
+        respuesta}
+        
+        \item \textbf{(0.5 puntos sobre 10) ¿Cómo has resuelto la exclusión mutua de la pantalla?}
+        
+    \end{enumerate}
 \subsection{Código Java de los ejercicios comentado}
+    \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
+
+    \end{lstlisting}
 
 \end{document}
