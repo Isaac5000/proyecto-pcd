@@ -25,7 +25,7 @@
 % Configuración para los bloques de código (listings)
 \lstset{
     language=Java,
-    basicstyle=\small\ttfamily,                             % ttfamily usará Courier ahora
+    basicstyle=\fontsize{6}{7}\selectfont\ttfamily,        % ttfamily usará Courier ahora
     columns=fullflexible,
     keepspaces=true,
     extendedchars=true,
@@ -74,7 +74,7 @@
     \begin{center}
         \huge \textbf{MEMORIA DE PRÁCTICAS} \\
         \vspace{1cm}
-        \Large Título del Proyecto 
+        \Large Entregables 
     \end{center}
 
     \vfill
@@ -86,18 +86,21 @@
 
 \section{Ejercicio 1: ReentrantLock}
 \subsection{Recursos no compartibles}
+Unicamente la pantalla, ya que es el recurso que ambos hilos necesitan para imprimir sus resultados. 
 \subsection{Condiciones de sincronización}
+El uso de un cerrojo para bloquear la sección crítica de la pantalla. Que permite a los hilos el acceso
+a la pantalla en exclusión mutua, evitando así que ambos hilos impriman al mismo tiempo y mezclen sus salidas.
 \subsection{Pseudocódigo comentado}
     \begin{algorithm}[H]
         \TitleOfAlgo{Clase Main}
         \DontPrintSemicolon
 
         \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-        \SetKwData{NumOperaciones}{NUM_OPERACIONES}
-        \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
-        \SetKwData{NumRango}{NUM_0_9}
-        \SetKwData{OpcionA}{OPCION_A}
-        \SetKwData{OpcionR}{OPCION_R}
+        \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
+        \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
+        \SetKwData{NumRango}{NUM\_0\_9}
+        \SetKwData{OpcionA}{OPCION\_A}
+        \SetKwData{OpcionR}{OPCION\_R}
 
         \SetKwFunction{GenerarMatriz}{generarMatriz}
         \SetKwFunction{MatrizToString}{matrizToString}
@@ -106,20 +109,20 @@
         \SetAlgoLined
         \tcp{Variables globales}
         \KwData{\\
-                $cerrojoPantalla : Cerrojo$\\
-                $NUM\_OPERACIONES : Entero$\\
-                $LONGITUD\_FILAS\_Y\_COLUMNAS : Entero$\\
-                $NUM\_0\_9 : Entero$\\
-                $OPCION\_A : Caracter$\\
-                $OPCION\_R : Caracter$\\
+                $\CerrojoPantalla : Cerrojo$\\
+                $\NumOperaciones : Entero$\\
+                $\LongitudMatriz : Entero$\\
+                $\NumRango : Entero$\\
+                $\OpcionA : Caracter$\\
+                $\OpcionR : Caracter$\\
         } 
         \BlankLine 
         \tcp{Inicialización de variables globales}
-        $NUM\_OPERACIONES \leftarrow 10$\;
-        $LONGITUD\_FILAS\_Y\_COLUMNAS \leftarrow 3$\;
-        $NUM\_0\_9 \leftarrow 10$\;
-        $OPCION\_A \leftarrow 'a'$\;
-        $OPCION\_R \leftarrow 'r'$\;
+        $\NumOperaciones \leftarrow 10$\;
+        $\LongitudMatriz \leftarrow 3$\;
+        $\NumRango \leftarrow 10$\;
+        $\OpcionA \leftarrow 'a'$\;
+        $\OpcionR \leftarrow 'r'$\;
         \BlankLine
 
         \Fn{main()}{
@@ -137,12 +140,14 @@
 
         \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
         \SetKwData{ImpactoAcumulado}{impactoAcumulado}
+        \SetKwData{MetricasDeEntrenamientoCadena}{metricasDeEntrenamientoCadena}
+        \SetKwData{ImpactoAcumuladoCadena}{impactoAcumuladoCadena}
         \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-        \SetKwData{NumOperaciones}{NUM_OPERACIONES}
-        \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
-        \SetKwData{NumRango}{NUM_0_9}
-        \SetKwData{OpcionA}{OPCION_A}
-        \SetKwData{OpcionR}{OPCION_R}
+        \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
+        \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
+        \SetKwData{NumRango}{NUM\_0\_9}
+        \SetKwData{OpcionA}{OPCION\_A}
+        \SetKwData{OpcionR}{OPCION\_R}
 
         \SetKwFunction{Run}{run}
         \SetKwFunction{GenerarMatriz}{generarMatriz}
@@ -153,24 +158,24 @@
         \SetAlgoLined
         \tcp{Variables de instancia}
         \KwData{\\
-                $metricasDeEntrenamiento : Matriz[][]$\\
-                $impactoAcumulado : Matriz[][]$\\
-                $metricasDeEntrenamientoCadena : Cadena$\\
-                $impactoAcumuladoCadena : Cadena$\\
+                $\MetricasDeEntrenamiento : Matriz[][]$\\
+                $\ImpactoAcumulado : Matriz[][]$\\
+                $\MetricasDeEntrenamientoCadena : Cadena$\\
+                $\ImpactoAcumuladoCadena : Cadena$\\
         }
         \BlankLine
         \Fn{\Run()}{
-            \For{$i \leftarrow 1$ \KwTo $NUM\_OPERACIONES$}{
+            \For{$i \leftarrow 1$ \KwTo $\NumOperaciones$}{
                 \GenerarMatriz(\MetricasDeEntrenamiento)\;
                 \BlankLine
                 \tcp{Calcular suma de matrices}
                 \tcp{Guardar resultado en impactoAcumulado}\;
                 \BlankLine
-                metricasDeEntrenamientoCadena $\leftarrow$ \MatrizToString($metricasDeEntrenamiento$, $OPCION\_A$)\;
-                impactoAcumuladoCadena $\leftarrow$ \MatrizToString($impactoAcumulado$, $OPCION\_R$)\;
+                $\MetricasDeEntrenamientoCadena \leftarrow \MatrizToString(\MetricasDeEntrenamiento, \OpcionA)$\;
+                $\ImpactoAcumuladoCadena \leftarrow \MatrizToString(\ImpactoAcumulado, \OpcionR)$\;
                 \BlankLine
                 \Wait{\CerrojoPantalla}\;
-                \tcp{Impresión en pantalla de las matrices}
+                \tcp{Impresión}
                 \Signal{\CerrojoPantalla}\;
 
             }
@@ -178,17 +183,19 @@
     \end{algorithm}
 
     \begin{algorithm}[H]
-        \TitleOfAlgo{Clase SumaMatriz}
+        \TitleOfAlgo{Clase CuadradoMatriz}
         \DontPrintSemicolon
 
         \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
         \SetKwData{ImpactoAcumulado}{impactoAcumulado}
+        \SetKwData{MetricasDeEntrenamientoCadena}{metricasDeEntrenamientoCadena}
+        \SetKwData{ImpactoAcumuladoCadena}{impactoAcumuladoCadena}
         \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-        \SetKwData{NumOperaciones}{NUM_OPERACIONES}
-        \SetKwData{LongitudMatriz}{LONGITUD_FILAS_Y_COLUMNAS}
-        \SetKwData{NumRango}{NUM_0_9}
-        \SetKwData{OpcionA}{OPCION_A}
-        \SetKwData{OpcionR}{OPCION_R}
+        \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
+        \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
+        \SetKwData{NumRango}{NUM\_0\_9}
+        \SetKwData{OpcionA}{OPCION\_A}
+        \SetKwData{OpcionR}{OPCION\_R}
 
         \SetKwFunction{Run}{run}
         \SetKwFunction{GenerarMatriz}{generarMatriz}
@@ -199,57 +206,211 @@
         \SetAlgoLined
         \tcp{Variables de instancia}
         \KwData{\\
-                $metricasDeEntrenamiento : Matriz[][]$\\
-                $impactoAcumulado : Matriz[][]$\\
-                $metricasDeEntrenamientoCadena : Cadena$\\
-                $impactoAcumuladoCadena : Cadena$\\
+                $\MetricasDeEntrenamiento : Matriz[][]$\\
+                $\ImpactoAcumulado : Matriz[][]$\\
+                $\MetricasDeEntrenamientoCadena : Cadena$\\
+                $\ImpactoAcumuladoCadena : Cadena$\\
         }
         \BlankLine
         \Fn{\Run()}{
-            \For{$i \leftarrow 1$ \KwTo $NUM\_OPERACIONES$}{
+            \For{$i \leftarrow 1$ \KwTo $\NumOperaciones$}{
                 \GenerarMatriz(\MetricasDeEntrenamiento)\;
                 \BlankLine
-                \tcp{Calcular suma de matrices}
+                \tcp{Calcular cuadrado de matrices}
                 \tcp{Guardar resultado en impactoAcumulado}\;
                 \BlankLine
-                metricasDeEntrenamientoCadena $\leftarrow$ \MatrizToString($metricasDeEntrenamiento$, $OPCION\_A$)\;
-                impactoAcumuladoCadena $\leftarrow$ \MatrizToString($impactoAcumulado$, $OPCION\_R$)\;
+                $\MetricasDeEntrenamientoCadena \leftarrow \MatrizToString(\MetricasDeEntrenamiento, \OpcionA)$\;
+                $\ImpactoAcumuladoCadena \leftarrow \MatrizToString(\ImpactoAcumulado, \OpcionR)$\;
                 \BlankLine
                 \Wait{\CerrojoPantalla}\;
-                \tcp{Impresión en pantalla de las matrices}
+                \tcp{Impresión}
                 \Signal{\CerrojoPantalla}\;
 
             }
         }
 
     \end{algorithm}
+\newpage
 \subsection{Cuestiones planteadas en los ejercicios}
-\begin{enumerate}[label=\alph*)]
-\item \textbf{Si no usas sincronización, ¿cómo podría ser la salida por pantalla?}
+    \begin{enumerate}[label=\alph*)]
+    \item \textbf{Si no usas sincronización, ¿cómo podría ser la salida por pantalla?}
 
-Como regla general, si no usas sincronización, la salida por pantalla es caótica e impredecible. En este caso, dado que ambos 
-hilos (SumaMatriz y CuadradoMatriz) están accediendo a la pantalla para imprimir sus resultados, sin sincronización podrían 
-intercalarse las impresiones de ambos hilos. Esto podría resultar en una salida mezclada donde partes de la matriz de SumaMatriz 
-se imprimen junto con partes de la matriz de CuadradoMatriz, haciendo que sea difícil o imposible entender los resultados.
+    Como regla general, si no usas sincronización, la salida por pantalla es caótica e impredecible. En este caso, dado que ambos 
+    hilos (SumaMatriz y CuadradoMatriz) están accediendo a la pantalla para imprimir sus resultados, sin sincronización podrían 
+    intercalarse las impresiones de ambos hilos. Esto podría resultar en una salida mezclada donde partes de la matriz de SumaMatriz 
+    se imprimen junto con partes de la matriz de CuadradoMatriz, haciendo que sea difícil o imposible entender los resultados.
 
-\noindent En el caso particular de java cada System.out.println() es una operación atómica, lo que significa que cada llamada a esta 
-función se ejecutará completamente sin ser interrumpida por otro hilo. Sin embargo, esto no garantiza que las impresiones de ambos hilos 
-no se mezclen, ya que cada hilo podría imprimir varias líneas de la matriz antes de que el otro hilo tenga la oportunidad de imprimir. 
-Por lo tanto, aunque cada línea individual se imprima de manera atómica, la secuencia completa de impresiones podría resultar en una salida 
-caótica si no se sincroniza adecuadamente.
+    \noindent En el caso particular de java cada System.out.println() es una operación atómica, lo que significa que cada llamada a esta 
+    función se ejecutará completamente sin ser interrumpida por otro hilo. Sin embargo, esto no garantiza que las impresiones de ambos hilos 
+    no se mezclen, ya que cada hilo podría imprimir varias líneas de la matriz antes de que el otro hilo tenga la oportunidad de imprimir. 
+    Por lo tanto, aunque cada línea individual se imprima de manera atómica, la secuencia completa de impresiones podría resultar en una salida 
+    caótica si no se sincroniza adecuadamente.
+    \end{enumerate}
 
-\end{enumerate}
-
+\newpage
 \subsection{Código Java de los ejercicios comentado}
     \begin{lstlisting}[language=Java, title={Clase Main}]
+        package ejercicio1;
 
+        public class CuadradoMatriz extends Thread {
+
+            @Override
+            public void run() {
+                
+                int metricasDeEntrenamiento[][] = 
+                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                int impactoAcumulado[][] = 
+                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                String metricasDeEntrenamientoCadena;
+                String impactoAcumuladoCadena;
+                
+                for (int operacionesRealizadas = 0;
+                    operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+                    
+                    Main.generarMatriz(metricasDeEntrenamiento);
+                    
+                    // Cálculo del cuadrado de la matriz
+                    for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
+                        for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
+                            impactoAcumulado[i][j] = 0;
+                            for (int k = 0; k < Main.LONGITUD_FILAS_Y_COLUMNAS; k++) {
+                                impactoAcumulado[i][j] += 
+                                    metricasDeEntrenamiento[i][k] * metricasDeEntrenamiento[k][j];
+                            }
+                        }
+                    }
+                    
+                    metricasDeEntrenamientoCadena = 
+                        Main.matrizToString(metricasDeEntrenamiento, Main.OPCION_A);
+                    impactoAcumuladoCadena = Main.matrizToString(impactoAcumulado, Main.OPCION_R);
+                    
+                    /* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
+                    * compartible no sea usado por más de un proceso a la vez
+                    */
+                    Main.cerrojoPantalla.lock();
+                    
+                    System.out.println("A x A");
+                    System.out.println(metricasDeEntrenamientoCadena);
+                    System.out.println("x\n");
+                    System.out.println(metricasDeEntrenamientoCadena);
+                    System.out.println("A2");
+                    System.out.println(impactoAcumuladoCadena);
+                    
+                    Main.cerrojoPantalla.unlock();
+                    
+                }
+                
+            }
+        }
     \end{lstlisting}
-
+    \newpage
     \begin{lstlisting}[language=Java, title={Clase SumaMatriz}]
+        package ejercicio1;
+
+        public class SumaMatriz extends Thread{
+            
+            
+            @Override
+            public void run() {
+                
+                int metricasDeEntrenamiento[][] = 
+                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                int impactoAcumulado[][] = 
+                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                String metricasDeEntrenamientoCadena;
+                String impactoAcumuladoCadena;
+                
+                for (int operacionesRealizadas = 0; 
+                    operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+                    
+                    Main.generarMatriz(metricasDeEntrenamiento);
+                    
+                    // Suma de la matriz A + A (2A)
+                    for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
+                        for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
+                            impactoAcumulado[i][j] = 
+                                metricasDeEntrenamiento[i][j] + metricasDeEntrenamiento[i][j];
+                        }
+                    }
+                    
+                    metricasDeEntrenamientoCadena = 
+                        Main.matrizToString(metricasDeEntrenamiento, Main.OPCION_A);
+                    impactoAcumuladoCadena = Main.matrizToString(impactoAcumulado, Main.OPCION_R);
+                    
+                    /* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
+                    * compartible no sea usado por más de un proceso a la vez
+                    */
+                    Main.cerrojoPantalla.lock();
+                    
+                    System.out.println("2A");
+                    System.out.println(metricasDeEntrenamientoCadena);
+                    System.out.println("+\n");
+                    System.out.println(metricasDeEntrenamientoCadena);
+                    System.out.println("A2");
+                    System.out.println(impactoAcumuladoCadena);
+                    
+                    Main.cerrojoPantalla.unlock();
+                    
+                }
+                
+            }
+        }
 
     \end{lstlisting}
-
+    \newpage
     \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
+        package ejercicio1;
+
+        public class CuadradoMatriz extends Thread {
+
+            @Override
+            public void run() {
+                
+                int metricasDeEntrenamiento[][] = 
+                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                int impactoAcumulado[][] = 
+                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                String metricasDeEntrenamientoCadena;
+                String impactoAcumuladoCadena;
+                
+                for (int operacionesRealizadas = 0; 
+                    operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+                    
+                    Main.generarMatriz(metricasDeEntrenamiento);
+                    
+                    // Cálculo del cuadrado de la matriz
+                    for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
+                        for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
+                            impactoAcumulado[i][j] = 0;
+                            for (int k = 0; k < Main.LONGITUD_FILAS_Y_COLUMNAS; k++) {
+                                impactoAcumulado[i][j] += 
+                                    metricasDeEntrenamiento[i][k] * metricasDeEntrenamiento[k][j];
+                            }
+                        }
+                    }
+                    
+                    metricasDeEntrenamientoCadena = 
+                        Main.matrizToString(metricasDeEntrenamiento, Main.OPCION_A);
+                    impactoAcumuladoCadena = Main.matrizToString(impactoAcumulado, Main.OPCION_R);
+                    
+                    /* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
+                    * compartible no sea usado por más de un proceso a la vez
+                    */
+                    Main.cerrojoPantalla.lock();
+                    
+                    System.out.println("A x A");
+                    System.out.println(metricasDeEntrenamientoCadena);
+                    System.out.println("x\n");
+                    System.out.println(metricasDeEntrenamientoCadena);
+                    System.out.println("A2");
+                    System.out.println(impactoAcumuladoCadena);
+                    
+                    Main.cerrojoPantalla.unlock();
+                    
+                }
+                
+            }
+        }
 
     \end{lstlisting}
 
@@ -257,6 +418,7 @@ caótica si no se sincroniza adecuadamente.
 \section{Ejercicio 2: Semáforos}
 \subsection{Recursos no compartibles}
 \subsection{Condiciones de sincronización}
+
 \subsection{Pseudocódigo comentado}
     \begin{algorithm}
         

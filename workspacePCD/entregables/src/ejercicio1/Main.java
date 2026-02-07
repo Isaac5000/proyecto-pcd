@@ -60,7 +60,11 @@ public class Main {
 		return matrizString;
 	}
 	
-	
+	/**
+	 * Función principal del programa donde se ejecutan dos hilos, uno que se encarga de 
+	 * hacer el cuadrado de una matriz y otro el doble de una matriz.
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		CuadradoMatriz cuadrado = new CuadradoMatriz();
 		SumaMatriz suma = new SumaMatriz();

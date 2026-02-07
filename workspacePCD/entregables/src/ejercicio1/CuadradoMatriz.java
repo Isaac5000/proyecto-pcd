@@ -1,7 +1,5 @@
 package ejercicio1;
 
-import ejercicio1.Main;
-
 public class CuadradoMatriz extends Thread {
 
 	@Override
@@ -9,9 +7,13 @@ public class CuadradoMatriz extends Thread {
 		
 		int metricasDeEntrenamiento[][] = new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
 		int impactoAcumulado[][] = new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+		String metricasDeEntrenamientoCadena;
+		String impactoAcumuladoCadena;
 		
 		for (int operacionesRealizadas = 0; operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+			
 			Main.generarMatriz(metricasDeEntrenamiento);
+			
 			// Cálculo del cuadrado de la matriz
 			for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
 				for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
@@ -22,13 +24,22 @@ public class CuadradoMatriz extends Thread {
 				}
 			}
 			
-			/* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso compartido no
+			metricasDeEntrenamientoCadena = Main.matrizToString(metricasDeEntrenamiento, Main.OPCION_A);
+			impactoAcumuladoCadena = Main.matrizToString(impactoAcumulado, Main.OPCION_R);
+			
+			/* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
 			 * compartible no sea usado por más de un proceso a la vez
 			 */
 			Main.cerrojoPantalla.lock();
 			
+			System.out.println("A x A");
+			System.out.println(metricasDeEntrenamientoCadena);
+			System.out.println("x\n");
+			System.out.println(metricasDeEntrenamientoCadena);
+			System.out.println("A2");
+			System.out.println(impactoAcumuladoCadena);
 			
-			
+			Main.cerrojoPantalla.unlock();
 			
 		}
 		
