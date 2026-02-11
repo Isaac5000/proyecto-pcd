@@ -8,8 +8,6 @@ public class SumaMatriz extends Thread{
 		
 		int metricasDeEntrenamiento[][] = new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
 		int impactoAcumulado[][] = new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-		String metricasDeEntrenamientoCadena;
-		String impactoAcumuladoCadena;
 		
 		for (int operacionesRealizadas = 0; operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
 			
@@ -22,20 +20,38 @@ public class SumaMatriz extends Thread{
 				}
 			}
 			
-			metricasDeEntrenamientoCadena = Main.matrizToString(metricasDeEntrenamiento, Main.OPCION_A);
-			impactoAcumuladoCadena = Main.matrizToString(impactoAcumulado, Main.OPCION_R);
 			
 			/* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
 			 * compartible no sea usado por más de un proceso a la vez
 			 */
 			Main.cerrojoPantalla.lock();
 			
-			System.out.println("2A");
-			System.out.println(metricasDeEntrenamientoCadena);
-			System.out.println("+\n");
-			System.out.println(metricasDeEntrenamientoCadena);
-			System.out.println("A2");
-			System.out.println(impactoAcumuladoCadena);
+			System.out.println("A + A\n");
+			
+			for (int[] fila : metricasDeEntrenamiento) {
+				for (int valor : fila) {
+					System.out.print(valor + "a ");
+				}
+				System.out.println();
+			}
+			System.out.println("\n+\n");
+
+			for (int[] fila : metricasDeEntrenamiento) {
+				for (int valor : fila) {
+					System.out.print(valor + "a ");
+				}
+				System.out.println();
+			}
+			
+			System.out.println("\n2A\n");
+			
+			for (int[] fila : impactoAcumulado) {
+				for (int valor : fila) {
+					System.out.print(valor + "r ");
+				}
+				System.out.println();
+			}
+			System.out.println();
 			
 			Main.cerrojoPantalla.unlock();
 			

@@ -12,15 +12,16 @@
 \usepackage{courier}                                        % Carga la fuente Courier
 \usepackage[hidelinks]{hyperref}                            % Para en el indice del PDF 
 \usepackage{fancyhdr}                                       % Para que el encabezado se vea profesional
-\usepackage{enumitem}                                       % Para personalizar listas
+\usepackage{enumitem}
+\usepackage{parskip}                                       % Para personalizar listas
 % Configuración del código y pseudocódigo
 \usepackage{listings}                                       % Para que el código se vea profesional
 \usepackage[spanish,onelanguage,ruled,vlined]{algorithm2e}  % Paquete para pseudocódigo
-
+\usepackage{xcolor}
 
 % Para que el compilador se calle
-\raggedbottom                                               % Quito el aviso Underfull \vbox 
-\setlength{\headheight}{15pt}                               % Ajusta la altura del encabezado para evitar advertencias
+%\raggedbottom                                               % Quito el aviso Underfull \vbox 
+%\setlength{\headheight}{15pt}                               % Ajusta la altura del encabezado para evitar advertencias
 
 % Configuración para los bloques de código (listings)
 \lstset{
@@ -41,6 +42,7 @@
 \SetAlCapNameFnt{\small\ttfamily}
 \SetKwSty{ttfamily}
 \SetKwProg{Fn}{Función}{}{fin}
+\SetKwProg{Cobegin}{cobegin}{}{coend}
 
 
 % Configuración del encabezado
@@ -59,13 +61,13 @@
     \thispagestyle{empty} % Fuerza a que esta página no tenga encabezado ni número
     % --- Bloque superior derecha ---
     \begin{flushright}
-        \textbf{Apellidos:} \\
-        \textbf{Nombre:} \\
+        \textbf{Apellidos:} Gómez González \\
+        \textbf{Nombre:} Isaac \\
         \textbf{Asignatura:} Programación de Concurrencia y Distribuida \\
-        \textbf{Grupo:}  \quad \textbf{Subgrupo:}  \\
+        \textbf{Grupo:} 2 \quad \textbf{Subgrupo:} 3 \\
         \textbf{Convocatoria:}  \\
         \textbf{Año académico:} 2025--2026 \\
-        \textbf{Profesor:} 
+        \textbf{Profesor:} Adrián Canovas Rodríguez \\
     \end{flushright}
 
     \vspace{4cm}
@@ -74,7 +76,7 @@
     \begin{center}
         \huge \textbf{MEMORIA DE PRÁCTICAS} \\
         \vspace{1cm}
-        \Large Entregables 
+        \Large Entregables 2025--2026
     \end{center}
 
     \vfill
@@ -85,400 +87,621 @@
 
 
 \section{Ejercicio 1: ReentrantLock}
-\subsection{Recursos no compartibles}
-Unicamente la pantalla, ya que es el recurso que ambos hilos necesitan para imprimir sus resultados. 
-\subsection{Condiciones de sincronización}
-El uso de un cerrojo para bloquear la sección crítica de la pantalla. Que permite a los hilos el acceso
-a la pantalla en exclusión mutua, evitando así que ambos hilos impriman al mismo tiempo y mezclen sus salidas.
-\subsection{Pseudocódigo comentado}
-    \begin{algorithm}[H]
-        \TitleOfAlgo{Clase Main}
-        \DontPrintSemicolon
-
-        \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-        \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
-        \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
-        \SetKwData{NumRango}{NUM\_0\_9}
-        \SetKwData{OpcionA}{OPCION\_A}
-        \SetKwData{OpcionR}{OPCION\_R}
-
-        \SetKwFunction{GenerarMatriz}{generarMatriz}
-        \SetKwFunction{MatrizToString}{matrizToString}
-        \SetKwFunction{Initial}{initial}
-
-        \SetAlgoLined
-        \tcp{Variables globales}
-        \KwData{\\
-                $\CerrojoPantalla : Cerrojo$\\
-                $\NumOperaciones : Entero$\\
-                $\LongitudMatriz : Entero$\\
-                $\NumRango : Entero$\\
-                $\OpcionA : Caracter$\\
-                $\OpcionR : Caracter$\\
-        } 
-        \BlankLine 
-        \tcp{Inicialización de variables globales}
-        $\NumOperaciones \leftarrow 10$\;
-        $\LongitudMatriz \leftarrow 3$\;
-        $\NumRango \leftarrow 10$\;
-        $\OpcionA \leftarrow 'a'$\;
-        $\OpcionR \leftarrow 'r'$\;
-        \BlankLine
-
-        \Fn{main()}{
-            \Initial(\CerrojoPantalla, $1$)\;
-            \tcp{Creación y arraque de 2 hilos} 
-            \tcp{SumaMatriz y CuadradoMatriz}\; 
+    Supongamos dos hilos con la siguiente funcionalidad en un \textbf{centro de alto rendimiento}: 
+    \begin{itemize}
+        \item Un primer hilo genera una matriz \textbf{A} (3x3) con enteros que representa métricas de 
+        entrenamiento (por ejemplo: fuerza, velocidad y resistencia en 3 días), calcula el 
+        “impacto acumulado” \textbf{A² = A·A} e imprime: \\
+        \\
+        \textcolor{black!70}{
+        A x A \\
+        a1 a2 a3 \\
+        a4 a5 a6 \\
+        a7 a8 a9 \\
+        \\
+        x   \\
+        \\
+        a1 a2 a3 \\
+        a4 a5 a6 \\
+        a7 a8 a9 \\
+        \\
+        A2 \\
+        \\
+        r1 r2 r3 \\ 
+        r4 r5 r6 \\
+        r7 r8 r9 \\
         }
-
-    \end{algorithm}
-
-
-    \begin{algorithm}[H]
-        \TitleOfAlgo{Clase SumaMatriz}
-        \DontPrintSemicolon
-
-        \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
-        \SetKwData{ImpactoAcumulado}{impactoAcumulado}
-        \SetKwData{MetricasDeEntrenamientoCadena}{metricasDeEntrenamientoCadena}
-        \SetKwData{ImpactoAcumuladoCadena}{impactoAcumuladoCadena}
-        \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-        \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
-        \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
-        \SetKwData{NumRango}{NUM\_0\_9}
-        \SetKwData{OpcionA}{OPCION\_A}
-        \SetKwData{OpcionR}{OPCION\_R}
-
-        \SetKwFunction{Run}{run}
-        \SetKwFunction{GenerarMatriz}{generarMatriz}
-        \SetKwFunction{MatrizToString}{matrizToString}
-        \SetKwFunction{Wait}{wait}
-        \SetKwFunction{Signal}{signal}
-
-        \SetAlgoLined
-        \tcp{Variables de instancia}
-        \KwData{\\
-                $\MetricasDeEntrenamiento : Matriz[][]$\\
-                $\ImpactoAcumulado : Matriz[][]$\\
-                $\MetricasDeEntrenamientoCadena : Cadena$\\
-                $\ImpactoAcumuladoCadena : Cadena$\\
+        \item El otro hilo hace lo mismo, pero calcula \textbf{A + A} (doble carga) e imprime: \\
+        \\
+        \textcolor{black!70}{
+        A + A \\
+        \\
+        ...\\ 
+        2A \\
+        ...\\
         }
-        \BlankLine
-        \Fn{\Run()}{
-            \For{$i \leftarrow 1$ \KwTo $\NumOperaciones$}{
-                \GenerarMatriz(\MetricasDeEntrenamiento)\;
-                \BlankLine
-                \tcp{Calcular suma de matrices}
-                \tcp{Guardar resultado en impactoAcumulado}\;
-                \BlankLine
-                $\MetricasDeEntrenamientoCadena \leftarrow \MatrizToString(\MetricasDeEntrenamiento, \OpcionA)$\;
-                $\ImpactoAcumuladoCadena \leftarrow \MatrizToString(\ImpactoAcumulado, \OpcionR)$\;
-                \BlankLine
-                \Wait{\CerrojoPantalla}\;
-                \tcp{Impresión}
-                \Signal{\CerrojoPantalla}\;
+    \end{itemize} 
+    Cada hilo repite su actividad \textbf{10 veces}. Desarrollar un programa concurrente en Java. La 
+    sincronización necesaria se resolverá usando cerrojos \textcolor{black!70}{ReentrantLock}.
+    \newpage
+    \subsection{Recursos no compartibles}
+    Unicamente la pantalla, ya que es el recurso que ambos hilos necesitan para imprimir sus resultados. 
+    \subsection{Condiciones de sincronización}
+    El uso de un cerrojo para bloquear la sección crítica de la pantalla. Que permite a los hilos el acceso
+    a la pantalla en exclusión mutua, evitando así que ambos hilos impriman al mismo tiempo y mezclen sus salidas.
+    \subsection{Pseudocódigo comentado}
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase Main}
+            \DontPrintSemicolon
 
+            \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+            \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
+            \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
+
+            \SetKwFunction{GenerarMatriz}{generarMatriz}
+            \SetKwFunction{Initial}{initial}
+            \SetKwFunction{Suma}{suma}
+            \SetKwFunction{Multiplicar}{multiplicar}
+
+            \SetAlgoLined
+            \tcp{Variables globales}
+            \KwData{\\
+                    $\CerrojoPantalla : Cerrojo$\\
+                    $\NumOperaciones : Entero$\\
+                    $\LongitudMatriz : Entero$\\
+            } 
+            \BlankLine 
+            \tcp{Inicialización de variables globales}
+            $\NumOperaciones \leftarrow 10$\;
+            $\LongitudMatriz \leftarrow 3$\;
+            \BlankLine
+
+            \Fn{main()}{
+                \Initial(\CerrojoPantalla, $1$)\;
+                \Cobegin{}{
+                    \Suma{}\;
+                    \Multiplicar{}\;
+                }
+                 
             }
-        }
-    \end{algorithm}
 
-    \begin{algorithm}[H]
-        \TitleOfAlgo{Clase CuadradoMatriz}
-        \DontPrintSemicolon
+        \end{algorithm}
 
-        \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
-        \SetKwData{ImpactoAcumulado}{impactoAcumulado}
-        \SetKwData{MetricasDeEntrenamientoCadena}{metricasDeEntrenamientoCadena}
-        \SetKwData{ImpactoAcumuladoCadena}{impactoAcumuladoCadena}
-        \SetKwData{CerrojoPantalla}{cerrojoPantalla}
-        \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
-        \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
-        \SetKwData{NumRango}{NUM\_0\_9}
-        \SetKwData{OpcionA}{OPCION\_A}
-        \SetKwData{OpcionR}{OPCION\_R}
 
-        \SetKwFunction{Run}{run}
-        \SetKwFunction{GenerarMatriz}{generarMatriz}
-        \SetKwFunction{MatrizToString}{matrizToString}
-        \SetKwFunction{Wait}{wait}
-        \SetKwFunction{Signal}{signal}
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase SumaMatriz}
+            \DontPrintSemicolon
 
-        \SetAlgoLined
-        \tcp{Variables de instancia}
-        \KwData{\\
-                $\MetricasDeEntrenamiento : Matriz[][]$\\
-                $\ImpactoAcumulado : Matriz[][]$\\
-                $\MetricasDeEntrenamientoCadena : Cadena$\\
-                $\ImpactoAcumuladoCadena : Cadena$\\
-        }
-        \BlankLine
-        \Fn{\Run()}{
-            \For{$i \leftarrow 1$ \KwTo $\NumOperaciones$}{
-                \GenerarMatriz(\MetricasDeEntrenamiento)\;
-                \BlankLine
-                \tcp{Calcular cuadrado de matrices}
-                \tcp{Guardar resultado en impactoAcumulado}\;
-                \BlankLine
-                $\MetricasDeEntrenamientoCadena \leftarrow \MatrizToString(\MetricasDeEntrenamiento, \OpcionA)$\;
-                $\ImpactoAcumuladoCadena \leftarrow \MatrizToString(\ImpactoAcumulado, \OpcionR)$\;
-                \BlankLine
-                \Wait{\CerrojoPantalla}\;
-                \tcp{Impresión}
-                \Signal{\CerrojoPantalla}\;
+            \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
+            \SetKwData{ImpactoAcumulado}{impactoAcumulado}
+            \SetKwData{MetricasDeEntrenamientoCadena}{metricasDeEntrenamientoCadena}
+            \SetKwData{ImpactoAcumuladoCadena}{impactoAcumuladoCadena}
+            \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+            \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
+            \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
 
+            \SetKwFunction{Suma}{suma}
+            \SetKwFunction{GenerarMatriz}{generarMatriz}
+            \SetKwFunction{Wait}{wait}
+            \SetKwFunction{Signal}{signal}
+
+            \SetAlgoLined
+            \tcp{Variables de instancia}
+            \KwData{\\
+                    $\MetricasDeEntrenamiento : Entero[][]$\\
+                    $\ImpactoAcumulado : Entero[][]$\\
             }
-        }
+            \BlankLine
+            \Fn{\Suma()}{
+                \For{$i \leftarrow 1$ \KwTo $\NumOperaciones$}{
+                    \GenerarMatriz(\MetricasDeEntrenamiento)\;
+                    \BlankLine
+                    \tcp{Calcular suma de matrices}
+                    \tcp{Guardar resultado en impactoAcumulado}\;
+                    \Wait{\CerrojoPantalla}\;
+                    \tcp{Impresión}
+                    \Signal{\CerrojoPantalla}\;
 
-    \end{algorithm}
-\newpage
-\subsection{Cuestiones planteadas en los ejercicios}
-    \begin{enumerate}[label=\alph*)]
-    \item \textbf{Si no usas sincronización, ¿cómo podría ser la salida por pantalla?}
+                }
+            }
+        \end{algorithm}
 
-    Como regla general, si no usas sincronización, la salida por pantalla es caótica e impredecible. En este caso, dado que ambos 
-    hilos (SumaMatriz y CuadradoMatriz) están accediendo a la pantalla para imprimir sus resultados, sin sincronización podrían 
-    intercalarse las impresiones de ambos hilos. Esto podría resultar en una salida mezclada donde partes de la matriz de SumaMatriz 
-    se imprimen junto con partes de la matriz de CuadradoMatriz, haciendo que sea difícil o imposible entender los resultados.
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase CuadradoMatriz}
+            \DontPrintSemicolon
 
-    \noindent En el caso particular de java cada System.out.println() es una operación atómica, lo que significa que cada llamada a esta 
-    función se ejecutará completamente sin ser interrumpida por otro hilo. Sin embargo, esto no garantiza que las impresiones de ambos hilos 
-    no se mezclen, ya que cada hilo podría imprimir varias líneas de la matriz antes de que el otro hilo tenga la oportunidad de imprimir. 
-    Por lo tanto, aunque cada línea individual se imprima de manera atómica, la secuencia completa de impresiones podría resultar en una salida 
-    caótica si no se sincroniza adecuadamente.
-    \end{enumerate}
+            \SetKwData{MetricasDeEntrenamiento}{metricasDeEntrenamiento}
+            \SetKwData{ImpactoAcumulado}{impactoAcumulado}
+            \SetKwData{MetricasDeEntrenamientoCadena}{metricasDeEntrenamientoCadena}
+            \SetKwData{ImpactoAcumuladoCadena}{impactoAcumuladoCadena}
+            \SetKwData{CerrojoPantalla}{cerrojoPantalla}
+            \SetKwData{NumOperaciones}{NUM\_OPERACIONES}
+            \SetKwData{LongitudMatriz}{LONGITUD\_FILAS\_Y\_COLUMNAS}
 
-\newpage
-\subsection{Código Java de los ejercicios comentado}
-    \begin{lstlisting}[language=Java, title={Clase Main}]
-        package ejercicio1;
+            \SetKwFunction{Multiplicar}{multiplicar}
+            \SetKwFunction{GenerarMatriz}{generarMatriz}
+            \SetKwFunction{MatrizToString}{matrizToString}
+            \SetKwFunction{Wait}{wait}
+            \SetKwFunction{Signal}{signal}
 
-        public class CuadradoMatriz extends Thread {
+            \SetAlgoLined
+            \tcp{Variables de instancia}
+            \KwData{\\
+                    $\MetricasDeEntrenamiento : Entero[][]$\\
+                    $\ImpactoAcumulado : Entero[][]$\\
+            }
+            \BlankLine
+            \Fn{\Multiplicar()}{
+                \For{$i \leftarrow 1$ \KwTo $\NumOperaciones$}{
+                    \GenerarMatriz(\MetricasDeEntrenamiento)\;
+                    \BlankLine
+                    \tcp{Calcular cuadrado de matrices}
+                    \tcp{Guardar resultado en impactoAcumulado}\;
+                    \Wait{\CerrojoPantalla}\;
+                    \tcp{Impresión}
+                    \Signal{\CerrojoPantalla}\;
 
-            @Override
-            public void run() {
+                }
+            }
+
+        \end{algorithm}
+    \newpage
+    \subsection{Cuestiones planteadas en los ejercicios}
+        \begin{enumerate}[label=\alph*)]
+        \item \textbf{Si no usas sincronización, ¿cómo podría ser la salida por pantalla?}
+
+        Como regla general, si no usas sincronización, la salida por pantalla es caótica e impredecible. En este caso, dado que ambos 
+        hilos (SumaMatriz y CuadradoMatriz) están accediendo a la pantalla para imprimir sus resultados, sin sincronización podrían 
+        intercalarse las impresiones de ambos hilos. Esto podría resultar en una salida mezclada donde partes de la matriz de SumaMatriz 
+        se imprimen junto con partes de la matriz de CuadradoMatriz, haciendo que sea difícil o imposible entender los resultados.
+
+        \noindent En el caso particular de java cada System.out.println() es una operación atómica, lo que significa que cada llamada a esta 
+        función se ejecutará completamente sin ser interrumpida por otro hilo. Sin embargo, esto no garantiza que las impresiones de ambos hilos 
+        no se mezclen, ya que cada hilo podría imprimir varias líneas de la matriz antes de que el otro hilo tenga la oportunidad de imprimir. 
+        Por lo tanto, aunque cada línea individual se imprima de manera atómica, la secuencia completa de impresiones podría resultar en una salida 
+        caótica si no se sincroniza adecuadamente.
+        \end{enumerate}
+
+    \newpage
+    \subsection{Código Java de los ejercicios comentado}
+        \begin{lstlisting}[language=Java, title={Clase Main}]
+            package ejercicio1;
+
+            import java.util.Random;
+            import java.util.concurrent.locks.ReentrantLock;
+
+            public class Main {
+                public static final int NUM_OPERACIONES = 10;
+                public static final int LONGITUD_FILAS_Y_COLUMNAS = 3;
+                public static final int NUM_0_9 = 10;
+
+                /* Este cerrojo se encarga de bloquear la sección crítica de la pantalla para que no acceda
+                * más de un hilo a la vez */ 
+                public static ReentrantLock cerrojoPantalla = new ReentrantLock();
                 
-                int metricasDeEntrenamiento[][] = 
-                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                int impactoAcumulado[][] = 
-                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                String metricasDeEntrenamientoCadena;
-                String impactoAcumuladoCadena;
+                /**
+                * Función que le da valores aleatorios entre 0 y 9 a una matriz de 3x3,
+                * @param matriz Es la matriz que se rellenara con núevos valores aleatorios
+                */
+                public static void generarMatriz(int[][] matriz){
+                    for(int i = 0; i < LONGITUD_FILAS_Y_COLUMNAS; i++) {
+                        for(int j = 0; j < LONGITUD_FILAS_Y_COLUMNAS; j++) {
+                            Random random = new Random();
+                            matriz[i][j] = random.nextInt(NUM_0_9);
+                        }
+                    }
+                }
                 
-                for (int operacionesRealizadas = 0;
-                    operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+                
+                /**
+                * Función principal del programa donde se ejecutan dos hilos, uno que se encarga de 
+                * hacer el cuadrado de una matriz y otro el doble de una matriz.
+                * @param args
+                */
+                public static void main(String[] args) {
+                    CuadradoMatriz cuadrado = new CuadradoMatriz();
+                    SumaMatriz suma = new SumaMatriz();
+                    cuadrado.start();
+                    suma.start();
                     
-                    Main.generarMatriz(metricasDeEntrenamiento);
+                    try {
+                        cuadrado.join();
+                        suma.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        \end{lstlisting}
+        \newpage
+        \begin{lstlisting}[language=Java, title={Clase SumaMatriz}]
+            package ejercicio1;
+
+            public class SumaMatriz extends Thread{
+                
+                
+                @Override
+                public void run() {
                     
-                    // Cálculo del cuadrado de la matriz
-                    for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
-                        for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
-                            impactoAcumulado[i][j] = 0;
-                            for (int k = 0; k < Main.LONGITUD_FILAS_Y_COLUMNAS; k++) {
-                                impactoAcumulado[i][j] += 
-                                    metricasDeEntrenamiento[i][k] * metricasDeEntrenamiento[k][j];
+                    int metricasDeEntrenamiento[][] = 
+                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                    int impactoAcumulado[][] = 
+                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                    
+                    for (int operacionesRealizadas = 0; 
+                        operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+                        
+                        Main.generarMatriz(metricasDeEntrenamiento);
+                        
+                        // Suma de la matriz A + A (2A)
+                        for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
+                            for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
+                                impactoAcumulado[i][j] = 
+                                    metricasDeEntrenamiento[i][j] + metricasDeEntrenamiento[i][j];
                             }
                         }
-                    }
-                    
-                    metricasDeEntrenamientoCadena = 
-                        Main.matrizToString(metricasDeEntrenamiento, Main.OPCION_A);
-                    impactoAcumuladoCadena = Main.matrizToString(impactoAcumulado, Main.OPCION_R);
-                    
-                    /* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
-                    * compartible no sea usado por más de un proceso a la vez
-                    */
-                    Main.cerrojoPantalla.lock();
-                    
-                    System.out.println("A x A");
-                    System.out.println(metricasDeEntrenamientoCadena);
-                    System.out.println("x\n");
-                    System.out.println(metricasDeEntrenamientoCadena);
-                    System.out.println("A2");
-                    System.out.println(impactoAcumuladoCadena);
-                    
-                    Main.cerrojoPantalla.unlock();
-                    
-                }
-                
-            }
-        }
-    \end{lstlisting}
-    \newpage
-    \begin{lstlisting}[language=Java, title={Clase SumaMatriz}]
-        package ejercicio1;
-
-        public class SumaMatriz extends Thread{
-            
-            
-            @Override
-            public void run() {
-                
-                int metricasDeEntrenamiento[][] = 
-                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                int impactoAcumulado[][] = 
-                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                String metricasDeEntrenamientoCadena;
-                String impactoAcumuladoCadena;
-                
-                for (int operacionesRealizadas = 0; 
-                    operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
-                    
-                    Main.generarMatriz(metricasDeEntrenamiento);
-                    
-                    // Suma de la matriz A + A (2A)
-                    for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
-                        for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
-                            impactoAcumulado[i][j] = 
-                                metricasDeEntrenamiento[i][j] + metricasDeEntrenamiento[i][j];
+                        
+                        
+                        /* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
+                        * compartible no sea usado por más de un proceso a la vez
+                        */
+                        Main.cerrojoPantalla.lock();
+                        
+                        System.out.println("A + A\n");
+                        
+                        for (int[] fila : metricasDeEntrenamiento) {
+                            for (int valor : fila) {
+                                System.out.print(valor + "a ");
+                            }
+                            System.out.println();
                         }
+                        System.out.println("\n+\n");
+
+                        for (int[] fila : metricasDeEntrenamiento) {
+                            for (int valor : fila) {
+                                System.out.print(valor + "a ");
+                            }
+                            System.out.println();
+                        }
+                        
+                        System.out.println("\n2A\n");
+                        
+                        for (int[] fila : impactoAcumulado) {
+                            for (int valor : fila) {
+                                System.out.print(valor + "r ");
+                            }
+                            System.out.println();
+                        }
+                        System.out.println();
+                        
+                        Main.cerrojoPantalla.unlock();
+                        
                     }
                     
-                    metricasDeEntrenamientoCadena = 
-                        Main.matrizToString(metricasDeEntrenamiento, Main.OPCION_A);
-                    impactoAcumuladoCadena = Main.matrizToString(impactoAcumulado, Main.OPCION_R);
-                    
-                    /* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
-                    * compartible no sea usado por más de un proceso a la vez
-                    */
-                    Main.cerrojoPantalla.lock();
-                    
-                    System.out.println("2A");
-                    System.out.println(metricasDeEntrenamientoCadena);
-                    System.out.println("+\n");
-                    System.out.println(metricasDeEntrenamientoCadena);
-                    System.out.println("A2");
-                    System.out.println(impactoAcumuladoCadena);
-                    
-                    Main.cerrojoPantalla.unlock();
-                    
                 }
-                
             }
-        }
 
-    \end{lstlisting}
-    \newpage
-    \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
-        package ejercicio1;
+        \end{lstlisting}
+        \newpage
+        \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
+            package ejercicio1;
 
-        public class CuadradoMatriz extends Thread {
+            public class CuadradoMatriz extends Thread {
 
-            @Override
-            public void run() {
-                
-                int metricasDeEntrenamiento[][] = 
-                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                int impactoAcumulado[][] = 
-                    new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                String metricasDeEntrenamientoCadena;
-                String impactoAcumuladoCadena;
-                
-                for (int operacionesRealizadas = 0; 
-                    operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
-                    
-                    Main.generarMatriz(metricasDeEntrenamiento);
-                    
-                    // Cálculo del cuadrado de la matriz
-                    for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
-                        for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
-                            impactoAcumulado[i][j] = 0;
-                            for (int k = 0; k < Main.LONGITUD_FILAS_Y_COLUMNAS; k++) {
-                                impactoAcumulado[i][j] += 
-                                    metricasDeEntrenamiento[i][k] * metricasDeEntrenamiento[k][j];
+                @Override
+                public void run() {
+
+                    int metricasDeEntrenamiento[][] = 
+                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                    int impactoAcumulado[][] = 
+                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+
+                    for (int operacionesRealizadas = 0; 
+                        operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+
+                        Main.generarMatriz(metricasDeEntrenamiento);
+
+                        // Cálculo del cuadrado de la matriz
+                        for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
+                            for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
+                                impactoAcumulado[i][j] = 0;
+                                for (int k = 0; k < Main.LONGITUD_FILAS_Y_COLUMNAS; k++) {
+                                    impactoAcumulado[i][j] += 
+                                        metricasDeEntrenamiento[i][k] * metricasDeEntrenamiento[k][j];
+                                }
                             }
                         }
-                    }
-                    
-                    metricasDeEntrenamientoCadena = 
-                        Main.matrizToString(metricasDeEntrenamiento, Main.OPCION_A);
-                    impactoAcumuladoCadena = Main.matrizToString(impactoAcumulado, Main.OPCION_R);
-                    
-                    /* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
-                    * compartible no sea usado por más de un proceso a la vez
-                    */
-                    Main.cerrojoPantalla.lock();
-                    
-                    System.out.println("A x A");
-                    System.out.println(metricasDeEntrenamientoCadena);
-                    System.out.println("x\n");
-                    System.out.println(metricasDeEntrenamientoCadena);
-                    System.out.println("A2");
-                    System.out.println(impactoAcumuladoCadena);
-                    
-                    Main.cerrojoPantalla.unlock();
-                    
-                }
-                
-            }
-        }
 
-    \end{lstlisting}
+
+                        /*
+                        * Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
+                        * compartible no sea usado por más de un proceso a la vez
+                        */
+                        Main.cerrojoPantalla.lock();
+                        
+                        System.out.println("A x A\n");
+                        
+                        for (int[] fila : metricasDeEntrenamiento) {
+                            for (int valor : fila) {
+                                System.out.print(valor + "a ");
+                            }
+                            System.out.println();
+                        }
+                        System.out.println("\nx\n");
+
+                        for (int[] fila : metricasDeEntrenamiento) {
+                            for (int valor : fila) {
+                                System.out.print(valor + "a ");
+                            }
+                            System.out.println();
+                        }
+                        
+                        System.out.println("\nA2\n");
+                        
+                        for (int[] fila : impactoAcumulado) {
+                            for (int valor : fila) {
+                                System.out.print(valor + "r ");
+                            }
+                            System.out.println();
+                        }
+                        System.out.println();
+
+                        Main.cerrojoPantalla.unlock();
+
+                    }
+
+                }
+            }
+
+        \end{lstlisting}
 
 \newpage
 \section{Ejercicio 2: Semáforos}
-\subsection{Recursos no compartibles}
-\subsection{Condiciones de sincronización}
 
-\subsection{Pseudocódigo comentado}
-    \begin{algorithm}
-        
-    \end{algorithm}
-\subsection{Cuestiones planteadas en los ejercicios}
-    Según las condiciones del problema:
-    \begin{enumerate}[label=\alph*)]
-        \item \textbf{(0.5 puntos sobre 10) Si consideramos un panel solamente ¿cómo es el acceso al mismo?}
-        Si consideramos los tres paneles ¿cómo es el acceso? Explica ambas situaciones.
-
-        \item \textbf{(0.5 puntos sobre 10) ¿Qué tipo de semáforos has usado para resolver el problema
-        (binarios, generales)?}
-
+    En un \textbf{centro de evaluación deportiva}, hay \textbf{3 pantallas} (paneles) para mostrar resultados de 
+    pruebas físicas. En el sistema se dispone de \textbf{3 instancias} de la clase Panel proporcionada en 
+    los recursos del aula virtual. Hay \textbf{10 hilos}, cada uno representa a un \textbf{equipo} de \textbf{4 deportistas}. 
+    Cada hilo repite \textbf{3 veces} la siguiente secuencia:
+    \begin{enumerate}[label=\arabic*)]
+        \item Cada hilo genera aleatoriamente una \textbf{matriz 5x5} de enteros para cada \textbf{uno de los 4 
+        deportistas del equipo}, donde \textbf{las filas representan 5 ejercicios} del test físico 
+        (sprint, salto, lanzamiento, resistencia, y agilidad) y \textbf{las columnas representan 5 
+        intentos} para conseguir la mejor marca en cada ejercicio. 
+        \item Para cada deportista, se calcula su \textbf{mejor marca por ejercicio}, seleccionando 
+        el \textbf{máximo} (o mínimo, en caso de ser tiempo) de los 5 intentos de cada fila. El 
+        resultado para cada deportista es un \textbf{vector de 5 elementos} (uno por ejercicio). 
+        \item A partir de los resultados anteriores, se construye una \textbf{matriz resumen de 
+        4x5 llamada R}, que representa el resumen del equipo: 
+        \begin{itemize}
+            \item Columna 1: mejor marca de cada deportista para el ejercicio 1 
+            \item Columna 2: mejor marca de cada deportista para el ejercicio 2
+            \item Columna 3: mejor marca de cada deportista para el ejercicio 3 
+            \item Columna 4: mejor marca de cada deportista para el ejercicio 4 
+            \item Columna 5: mejor marca de cada deportista para el ejercicio 5
+        \end{itemize}
+        \item Muestra en \textbf{un panel que esté disponible} la siguiente salida: \\
+        \\
+        \textcolor{black!70}{
+        Usando panel P el hilo (equipo) id \\
+        \\
+        Matriz R (resumen del equipo X: mejores marcas) = ... \\
+        \\
+        Terminando de usar panel P el hilo (equipo) id \\
+        \\ }
+        Los pasos 1, 2, 3 y 4 se repiten \textbf{3 veces} por equipo. \\
+        \\
+        Los 10 hilos (equipos) comparten los \textbf{3 paneles} del sistema y, usando \textbf{semáforos}, se debe 
+        añadir la sincronización necesaria para que: 
+        \begin{itemize}
+            \item nunca dos hilos escriban simultáneamente en el mismo panel, 
+            \item el uso de los paneles sea eficiente (máximo paralelismo posible). 
+        \end{itemize}
+        La sincronización hay que resolverla \textbf{con semáforos}.
     \end{enumerate}
-\subsection{Código Java de los ejercicios comentado}
 
-\newpage
+    \subsection{Recursos no compartibles}
+    \subsection{Condiciones de sincronización}
+
+    \subsection{Pseudocódigo comentado}
+        \begin{algorithm}
+            \TitleOfAlgo{Clase Main}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwData{Paneles}{paneles}
+            \SetKwData{numeroPaneles}{NUMERO\_DE\_PANELES}
+            \SetKwData{numeroHilos}{NUMERO\_DE\_HILOS}
+            \SetKwData{numeroDeportistas}{NUMERO\_DE\_DEPORTISTAS\_POR\_HILO}
+            \SetKwData{numeroSecuencias}{NUMERO\_DE\_SECUENCIAS}
+            \SetKwData{numeroEjercicios}{NUMERO\_DE\_EJERCICIOS}
+
+
+            \KwData{ \\
+                    $\Paneles : Panel[]$\\
+                    $\numeroPaneles : Entero$\\
+                    $\numeroHilos : Entero$\\
+                    $\numeroDeportistas : Entero$\\
+                    $\numeroSecuencias : Entero$\\
+
+            }
+            \BlankLine
+            \tcp{Inicialización de variables globales}
+            $\numeroPaneles \leftarrow 3$\;
+            $\numeroHilos \leftarrow 10$\;
+            $\numeroDeportistas \leftarrow 4$\;
+            $\numeroSecuencias \leftarrow 3$\;
+            $\numeroEjercicios \leftarrow 5$\;
+
+
+            
+
+
+        \end{algorithm}
+        \begin{algorithm}
+            \TitleOfAlgo{Clase}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwData{MatrizDeEjercicios}{matrizDeEjercicios}
+            \SetKwData{numeroDeportistas}{NUMERO\_DE\_DEPORTISTAS\_POR\_HILO}
+            \SetKwData{numeroSecuencias}{NUMERO\_DE\_SECUENCIAS}
+            \SetKwData{MatrizResumen}{R}
+
+            \KwData{\\
+                    $\MatrizDeEjercicios : Entero[][]$\\
+                    $\MatrizResumen : Entero[][]$\\
+            }
+        \end{algorithm}
+        \begin{algorithm}
+            \TitleOfAlgo{Clase}
+            \DontPrintSemicolon
+            \SetAlgoLined
+        \end{algorithm}
+    \subsection{Cuestiones planteadas en los ejercicios}
+        Según las condiciones del problema:
+        \begin{enumerate}[label=\alph*)]
+            \item \textbf{(0.5 puntos sobre 10) Si consideramos un panel solamente ¿cómo es el acceso al mismo?}
+            Si consideramos los tres paneles ¿cómo es el acceso? Explica ambas situaciones.
+
+            \item \textbf{(0.5 puntos sobre 10) ¿Qué tipo de semáforos has usado para resolver el problema
+            (binarios, generales)?}
+
+        \end{enumerate}
+    \subsection{Código Java de los ejercicios comentado}
+        \begin{lstlisting}[language=Java, title={Clase}]
+
+        \end{lstlisting}
+    \newpage
 \section{Ejercicio 3: Monitores}
-\subsection{Recursos no compartibles}
-\subsection{Condiciones de sincronización}
-\subsection{Pseudocódigo comentado}
-    \begin{algorithm}
-        
-    \end{algorithm}
-\subsection{Cuestiones planteadas en los ejercicios}
-    \begin{enumerate}[label=\alph*)]
-        \item \textbf{(0.5 puntos) Indica si la acción de entrenar es concurrente o en exclusión mutua y
-        justifica.}
+    En este ejercicio se quiere simular mediante un programa concurrente la actividad en 
+    un \textbf{gimnasio}. El flujo para entrenar es el siguiente: 
+    \begin{enumerate}
+        \item \textbf{Acceso al gimnasio mediante tornos}): Un cliente llega al gimnasio y debe pasar 
+        por \textbf{uno de los 3 tornos de acceso} para validar su entrada. Cada torno tiene su \textbf{cola 
+        individual}. El tiempo que tarda el cliente en completar el acceso (validación + entrada) 
+        es \textbf{X milisegundos} (valor aleatorio entre 1 y 5). Nota: el cliente debe situarse en 
+        el \textbf{primer torno} que encuentre libre; si los 3 están ocupados, esperará en la \textbf{cola del 
+        torno} que tenga menor tiempo de espera. 
+        \item \textbf{Elección de zona de entrenamiento}: Tras pasar la zona de tornos, el cliente elige a 
+        qué \textbf{zona de entrenamiento} dirigirse en función del tiempo estimado de espera. El 
+        gimnasio tiene \textbf{4 zonas}, y \textbf{cada zona dispone de 5 máquinas: Zona 1 – Cardio, Zona 
+        2 – Fuerza, Zona 3 – Funcional, Zona 4 - Estiramientos} . Un cliente \textbf{puede entrar} a 
+        una zona si al menos una de sus máquinas está libre. Si hay varias zonas con máquinas 
+        libres elegirá una de forma aleatoria. Si \textbf{las 5 máquinas} de una zona están ocupadas, el 
+        cliente debe esperar en la \textbf{cola de acceso de esa zona} (una cola por zona). 
+        \item Dentro de la \textbf{zona de Cardio} existe una \textbf{bicicleta premium} que tiene una \textbf{cola 
+        exclusiva propia}, independiente de la cola general de la zona. Un cliente puede entrar 
+        en Cardio si hay alguna de las 5 máquinas libres (según el paso 2). Si el cliente desea 
+        usar la \textbf{bicicleta premium} (decisión con probabilidad del 30%) y está ocupada, deberá 
+        esperar en la \textbf{cola exclusiva} de la bicicleta premium, incluso aunque ya esté dentro. 
+        \item El entrenamiento tarda \textbf{Y milisegundos} (valor aleatorio por cliente), representado 
+        mediante \textcolor{black!70}{el método Sleep() de Java}.
+    \end{enumerate} 
+    Se realizará una simulación con  \textbf{50 hilos cliente}, con valores X e Y inicializados 
+    aleatoriamente. Desarrollar un programa concurrente en Java para resolver el problema anterior 
+    usando monitores como mecanismo para la sincronización. \\
+    \\
+    Formato de salida obligatorio: Justo antes de decidir a qué zona dirigirse, cada cliente debe 
+    imprimir en pantalla: \\
 
-        \item \textbf{(0.75 puntos) ¿Qué tipo de monitor Java has usado? Justifica.}
+    \newpage
+    \textcolor{black!70}{
+    -------------------------------------------------------------- \\
+    Cliente id ha pasado por el torno: ----- \\
+    Tiempo en el torno (acceso): X \\
+    Zona elegida: ----- \\
+    Tiempo de entrenamiento: Y \\
+    Estimación de espera (sin incluirse a sí mismo): \\
+    \hspace*{1em}Zona1(Cardio)=----,\hspace*{2em}Zona2(Fuerza)=----,\hspace*{2em}Zona3(Funcional)=----,\\
+    Zona4(Estiramientos)=---- \\
+    Espera bicicleta premium (si aplica)=---- \\
+    -------------------------------------------------------------- \\
+    }
+    \subsection{Recursos no compartibles}
+    \subsection{Condiciones de sincronización}
+    \subsection{Pseudocódigo comentado}
+        \begin{algorithm}
+            \TitleOfAlgo{Clase}
+            \DontPrintSemicolon
+            \SetAlgoLined
+        \end{algorithm}
+    \subsection{Cuestiones planteadas en los ejercicios}
+        Según las condiciones de sincronización del problema, 
+        \begin{enumerate}[label=\alph*)]
+            \item \textbf{(0.5 puntos) Indica si la acción de entrenar es concurrente o en exclusión mutua y
+            justifica.}
+
+            \item \textbf{(0.75 puntos) ¿Qué tipo de monitor Java has usado? Justifica.}
+            
+            \item \textbf{(0.5 puntos) En el monitor, ¿has usado notify/signal o notifyAll/signalAll? Justifica}
+            
+            \item \textbf{(0.75 puntos) ¿Cómo se ha resuelto la exclusión mutua de la pantalla en este problema}
+            
+        \end{enumerate}
+    \subsection{Código Java de los ejercicios comentado}
+        \begin{lstlisting}[language=Java, title={Clase}]
+
+        \end{lstlisting}
+
+    \newpage
+    \section{Ejercicio 4: Paso de Mensajes Asíncrono}
+    Consideremos un conjunto de 50 aficionados que llegan a un estadio de fútbol para entrar a un 
+    partido y deben pasar por el control de acceso tras validar su entrada. Para acceder hay dos 
+    tornos con sus respectivas colas: la cola R y la cola L, siendo la cola R más rápida que la L (por 
+    ejemplo, porque el torno R tiene lector más eficiente o un agente adicional). Cada aficionado 
+    tiene que usar una cola para validar su entrada durante un tiempo estimado (valor aleatorio 
+    entre 1 y 10). El controlador de accesos, cuando llega un nuevo aficionado a validar la entrada, 
+    estima su tiempo de validación y a aquellos aficionados cuyo tiempo estimado sea menor o 
+    igual a 5, se les asignará el torno más rápido, es decir, la cola R, a los demás aficionados se les 
+    asignará el torno L. Durante el partido, cada aficionado puede salir de su grada para ir a los 
+    baños o a la zona de compra de comida y bebida. Para volver a su zona, debe pasar de nuevo 
+    por los tornos, repitiendo el proceso de validación. Este ciclo de “salir y volver a entrar” lo 
+    realizará 5 veces a lo largo del partido. Es decir, cada hilo repite 5 veces la siguiente secuencia 
+    de acciones: \\
+    \\
+    \begin{enumerate}
         
-        \item \textbf{(0.5 puntos) En el monitor, ¿has usado notify/signal o notifyAll/signalAll? Justifica}
-        
-        \item \textbf{(0.75 puntos) ¿Cómo se ha resuelto la exclusión mutua de la pantalla en este problema}
-        
+    \item Realiza una acción previa (usando Sleep ()), por ejemplo caminar hacia los baños. 
+    \item Solicita ponerse en una cola (R o L según el controlador de accesos le indique). 
+    \item Realiza la validación en el torno asignado. 
+    \item Libera la cola (deja libre el torno), 
+    \item Imprime en pantalla la información que se indica a continuación:\\
+    \\
+    \textcolor{black!70}{
+    \hspace*{2em}“Aficionado id ha usado la cola X \\
+    \\
+    \hspace*{2em}Tiempo de validación = T \\
+    \\
+    \hspace*{2em}Thread.sleep(T) \\
+    \\
+    \hspace*{2em}Aficionado id liberando la cola X” \\
+    \\
+    }
+    donde X es la cola asignada y T el tiempo de validación. 
     \end{enumerate}
-\subsection{Código Java de los ejercicios comentado}
-    \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
+    Desarrollar un programa concurrente en Java para resolver el problema anterior usando como 
+    mecanismo para la sincronización el paso de mensajes asíncrono. 
+    \subsection{Recursos no compartibles}
+    \subsection{Condiciones de sincronización}
+    \subsection{Pseudocódigo comentado}
+        \begin{algorithm}
+            \TitleOfAlgo{Clase}
+            \DontPrintSemicolon
+            \SetAlgoLined
+        \end{algorithm}
+    \subsection{Cuestiones planteadas en los ejercicios}
+        \begin{enumerate}[label=\alph*)]
+            \item \textbf{(0.5 puntos sobre 10) ¿Se pueden usar simultáneamente los dos tornos? Justifica la
+            respuesta}
+            
+            \item \textbf{(0.5 puntos sobre 10) ¿Cómo has resuelto la exclusión mutua de la pantalla?}
+            
+        \end{enumerate}
+    \subsection{Código Java de los ejercicios comentado}
+        \begin{lstlisting}[language=Java, title={Clase }]
 
-    \end{lstlisting}
+        \end{lstlisting}
 
-\newpage
-\section{Ejercicio 4: Paso de Mensajes Asíncrono}
-\subsection{Recursos no compartibles}
-\subsection{Condiciones de sincronización}
-\subsection{Pseudocódigo comentado}
-    \begin{algorithm}
-        
-    \end{algorithm}
-\subsection{Cuestiones planteadas en los ejercicios}
-    \begin{enumerate}[label=\alph*)]
-        \item \textbf{(0.5 puntos sobre 10) ¿Se pueden usar simultáneamente los dos tornos? Justifica la
-        respuesta}
-        
-        \item \textbf{(0.5 puntos sobre 10) ¿Cómo has resuelto la exclusión mutua de la pantalla?}
-        
-    \end{enumerate}
-\subsection{Código Java de los ejercicios comentado}
-    \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
-
-    \end{lstlisting}
 
 \end{document}
