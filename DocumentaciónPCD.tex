@@ -13,15 +13,15 @@
 \usepackage[hidelinks]{hyperref}                            % Para en el indice del PDF 
 \usepackage{fancyhdr}                                       % Para que el encabezado se vea profesional
 \usepackage{enumitem}
-\usepackage{parskip}                                       % Para personalizar listas
+\usepackage{parskip}                                        % Para personalizar listas
 % Configuración del código y pseudocódigo
 \usepackage{listings}                                       % Para que el código se vea profesional
 \usepackage[spanish,onelanguage,ruled,vlined]{algorithm2e}  % Paquete para pseudocódigo
 \usepackage{xcolor}
 
 % Para que el compilador se calle
-%\raggedbottom                                               % Quito el aviso Underfull \vbox 
-%\setlength{\headheight}{15pt}                               % Ajusta la altura del encabezado para evitar advertencias
+\raggedbottom                                               % Quito el aviso Underfull \vbox 
+\setlength{\headheight}{15pt}                               % Ajusta la altura del encabezado para evitar advertencias
 
 % Configuración para los bloques de código (listings)
 \lstset{
@@ -43,7 +43,7 @@
 \SetKwSty{ttfamily}
 \SetKwProg{Fn}{Función}{}{fin}
 \SetKwProg{Cobegin}{cobegin}{}{coend}
-
+\SetKwProg{Funcion}{}{}{}
 
 % Configuración del encabezado
 \pagestyle{fancy}
@@ -61,13 +61,15 @@
     \thispagestyle{empty} % Fuerza a que esta página no tenga encabezado ni número
     % --- Bloque superior derecha ---
     \begin{flushright}
-        \textbf{Apellidos:} Gómez González \\
-        \textbf{Nombre:} Isaac \\
-        \textbf{Asignatura:} Programación de Concurrencia y Distribuida \\
-        \textbf{Grupo:} 2 \quad \textbf{Subgrupo:} 3 \\
-        \textbf{Convocatoria:}  \\
-        \textbf{Año académico:} 2025--2026 \\
-        \textbf{Profesor:} Adrián Canovas Rodríguez \\
+        \begin{tabular}{rl}
+            \textbf{Apellidos:} & Gómez González \\
+            \textbf{Nombre:} & Isaac \\
+            \textbf{Asignatura:} & PCD \\
+            \textbf{Grupo:} & 2 \quad \textbf{Subgrupo:} 3 \\
+            \textbf{Convocatoria:} & \\
+            \textbf{Año académico:} & 2025--2026 \\
+            \textbf{Profesor:} & Adrián Cánovas Rodríguez \\
+        \end{tabular}
     \end{flushright}
 
     \vspace{4cm}
@@ -87,6 +89,7 @@
 
 
 \section{Ejercicio 1: ReentrantLock}
+    \iffalse
     Supongamos dos hilos con la siguiente funcionalidad en un \textbf{centro de alto rendimiento}: 
     \begin{itemize}
         \item Un primer hilo genera una matriz \textbf{A} (3x3) con enteros que representa métricas de 
@@ -124,6 +127,7 @@
     Cada hilo repite su actividad \textbf{10 veces}. Desarrollar un programa concurrente en Java. La 
     sincronización necesaria se resolverá usando cerrojos \textcolor{black!70}{ReentrantLock}.
     \newpage
+    \fi
     \subsection{Recursos no compartibles}
     Unicamente la pantalla, ya que es el recurso que ambos hilos necesitan para imprimir sus resultados. 
     \subsection{Condiciones de sincronización}
@@ -459,6 +463,7 @@
 \newpage
 \section{Ejercicio 2: Semáforos}
 
+    \iffalse
     En un \textbf{centro de evaluación deportiva}, hay \textbf{3 pantallas} (paneles) para mostrar resultados de 
     pruebas físicas. En el sistema se dispone de \textbf{3 instancias} de la clase Panel proporcionada en 
     los recursos del aula virtual. Hay \textbf{10 hilos}, cada uno representa a un \textbf{equipo} de \textbf{4 deportistas}. 
@@ -499,77 +504,346 @@
         \end{itemize}
         La sincronización hay que resolverla \textbf{con semáforos}.
     \end{enumerate}
-
+    \fi
     \subsection{Recursos no compartibles}
+    Para este problema cada panel individual no es compartible, ya que cada uno se comporta como una pantalla
+    independiente, por ello es necesario protegerlos.
+    Para protegerlos se crea una variable \textbf{panelesLibres} que almacena un booleano para cada panel, que 
+    también es un recurso no copartible, porque podría estar siendo usa tanto por un hilo para leer como por otroç
+    para escribir.
     \subsection{Condiciones de sincronización}
-
+    Para garantizar las condiciones de sincronización se crean dos semáforos: \textbf{semaforoDePaneles} y 
+    \textbf{mutexVariablesCompartidas}. El primero se encarga de bloquear la sección crítica de la pantalla para 
+    que no accedan más de tres procesos a los paneles al mismo tiempo, siendo necesario que los hilos que acceden
+    a los paneles se bloqueen en la sección crítica de la pantalla si no hay paneles libres y se liberan cuando
+    hay alguno disponible, siendo esto una condición de sincronización. Con el segundo semáforo se comprueba que
+    alguíen no esté usando ya el array \textbf{panelesLibres} para evitar que uno pueda escribir y otro leer a la 
+    vez, protegiendo así un recurso no compartible, hasta que quede libre.
+    \newpage
     \subsection{Pseudocódigo comentado}
-        \begin{algorithm}
+        \begin{algorithm}[H]
             \TitleOfAlgo{Clase Main}
             \DontPrintSemicolon
             \SetAlgoLined
 
             \SetKwData{Paneles}{paneles}
+            \SetKwData{PanelesLibres}{panelesLibres}
+            \SetKwData{SemaforoDePaneles}{semaforoDePaneles}
+            \SetKwData{MutexVariablesCompartidas}{mutexVariablesCompartidas}
             \SetKwData{numeroPaneles}{NUMERO\_DE\_PANELES}
-            \SetKwData{numeroHilos}{NUMERO\_DE\_HILOS}
-            \SetKwData{numeroDeportistas}{NUMERO\_DE\_DEPORTISTAS\_POR\_HILO}
+            \SetKwData{numeroEquipos}{NUMERO\_DE\_EQUIPOS}
+            \SetKwData{numeroDeportistas}{NUMERO\_DE\_DEPORTISTAS\_POR\_EQUIPO}
             \SetKwData{numeroSecuencias}{NUMERO\_DE\_SECUENCIAS}
             \SetKwData{numeroEjercicios}{NUMERO\_DE\_EJERCICIOS}
+            %\SetKwData{inicializarSemaforoBinario}{INICIALIZAR\_SEMAFORO\_BINARIO}
+            \SetKwData{Equipos}{equipos}
 
+            \SetKwFunction{Initial}{initial}
 
             \KwData{ \\
-                    $\Paneles : Panel[]$\\
+                \hspace*{1.75em}$\Paneles : Panel[]$ \tcp{Paneles disponibles}\\
+                    $\PanelesLibres : Booleano[]$\\
+                    $\SemaforoDePaneles : Semaforo$\\
+                    $\MutexVariablesCompartidas : Semaforo$\\
                     $\numeroPaneles : Entero$\\
-                    $\numeroHilos : Entero$\\
+                    $\numeroEquipos : Entero$\\
                     $\numeroDeportistas : Entero$\\
                     $\numeroSecuencias : Entero$\\
-
+                    $\numeroEjercicios : Entero$\\
+                    %$\inicializarSemaforoBinario : Entero$\\
+                    $\Equipos : Equipo[]$\\
             }
             \BlankLine
             \tcp{Inicialización de variables globales}
             $\numeroPaneles \leftarrow 3$\;
-            $\numeroHilos \leftarrow 10$\;
+            $\numeroEquipos \leftarrow 10$\;
             $\numeroDeportistas \leftarrow 4$\;
             $\numeroSecuencias \leftarrow 3$\;
             $\numeroEjercicios \leftarrow 5$\;
+            %$\inicializarSemaforoBinario \leftarrow 1$\;
 
+            \Fn{main()}{
+                \Initial{\SemaforoDePaneles, \numeroPaneles}\;
+                \Initial{\MutexVariablesCompartidas, 1}\;
+                \For{$i \leftarrow 1$ \KwTo $\numeroPaneles$}{
+                    $\PanelesLibres[i] \leftarrow true$\;
+                }
+                \Cobegin{}{
+                    \For{$i \leftarrow 1$ \KwTo $\numeroEquipos$}{
+                        $\Equipos[i].equipo(i)$\;
+                    }
+                }
+            }
 
+        \end{algorithm}
+        \newpage
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase Equipo}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            % Variables de la instancia
+            \SetKwData{TablaDeMatricesDeEjercicios}{tablaDeMatricesDeEjercicios}
+            \SetKwData{MatrizResumen}{MatrizResumenR}
+            \SetKwData{IdEquipo}{idEquipo}
+            % Variables compartidas
+            \SetKwData{SemaforoDePaneles}{semaforoDePaneles}
+            \SetKwData{MutexVariablesCompartidas}{mutexVariablesCompartidas}
+            \SetKwData{Paneles}{paneles}
+            \SetKwData{PanelesLibres}{panelesLibres}
+            \SetKwData{numeroDeportistas}{NUMERO\_DE\_DEPORTISTAS\_POR\_EQUIPO}
+            \SetKwData{numeroSecuencias}{NUMERO\_DE\_SECUENCIAS}
+            \SetKwData{numeroEjercicios}{NUMERO\_DE\_EJERCICIOS}
+
+            \SetKwFunction{Wait}{wait}
+            \SetKwFunction{Signal}{signal}
+            \SetKwFunction{Equipo}{equipo}
+            
+            \tcp{Variables de la instancia}
+            \KwData{\\
+                    $\TablaDeMatricesDeEjercicios : Entero[][][]$\\
+                    $\MatrizResumen : Entero[][]$\\
+                    $\IdEquipo : Entero$
+            }
+            \BlankLine
+            \Fn{\Equipo(\IdEquipo)}{
+                \For{$i \leftarrow 1$ \KwTo $\numeroSecuencias$}{
+                    \tcp{Generar \TablaDeMatricesDeEjercicios}
+                    \tcp{Rellenar \MatrizResumen}
+                    \BlankLine
+                    \Funcion{\Wait{\SemaforoDePaneles}}{
+                        
+                        \Funcion{\Wait{\MutexVariablesCompartidas}}{
+                            \tcp{Buscar panel disponible}
+                            \tcp{Poner a false el panel escogido}
+                            \tcp{Guadar idPanel escogido}
+                        
+                        }{\Signal{\MutexVariablesCompartidas}\;}
+                        \tcp{Imprimir en panel escogido}
+                        \Funcion{\Wait{\MutexVariablesCompartidas}}{
+                        \PanelesLibres[idPanel] = true\;
+                        }
+                        {\Signal{\MutexVariablesCompartidas}}
+                        }
+                    {\Signal{\SemaforoDePaneles}}
+                    }
+                }
             
 
-
         \end{algorithm}
-        \begin{algorithm}
-            \TitleOfAlgo{Clase}
-            \DontPrintSemicolon
-            \SetAlgoLined
-
-            \SetKwData{MatrizDeEjercicios}{matrizDeEjercicios}
-            \SetKwData{numeroDeportistas}{NUMERO\_DE\_DEPORTISTAS\_POR\_HILO}
-            \SetKwData{numeroSecuencias}{NUMERO\_DE\_SECUENCIAS}
-            \SetKwData{MatrizResumen}{R}
-
-            \KwData{\\
-                    $\MatrizDeEjercicios : Entero[][]$\\
-                    $\MatrizResumen : Entero[][]$\\
-            }
-        \end{algorithm}
-        \begin{algorithm}
-            \TitleOfAlgo{Clase}
-            \DontPrintSemicolon
-            \SetAlgoLined
-        \end{algorithm}
+        \newpage
     \subsection{Cuestiones planteadas en los ejercicios}
         Según las condiciones del problema:
         \begin{enumerate}[label=\alph*)]
-            \item \textbf{(0.5 puntos sobre 10) Si consideramos un panel solamente ¿cómo es el acceso al mismo?}
-            Si consideramos los tres paneles ¿cómo es el acceso? Explica ambas situaciones.
-
+            \item \textbf{(0.5 puntos sobre 10) Si consideramos un panel solamente ¿cómo es el acceso al mismo? 
+            Si consideramos los tres paneles ¿cómo es el acceso? Explica ambas situaciones.}\\
+            En el caso de tener un unico panel, el acceso al mismo se realiza mediante un mutex, que se encarga de 
+            bloquear la sección crítica de la pantalla para que esta no pueda ser usada por más de un proceso
+            a la vez.\\\\
+            En el caso de los tres paneles, hay que garantizar que no accede más de un hilo a cada panel,
+            pero esto permite que varios hilos impriman sus resultados en paralelo ya que es como si hubieran
+            tres pantallas independientes, por lo que solo hay que proteger la selección de la pantalla que es
+            mucho más rápido que esperar a que un hilo use la pantalla.
             \item \textbf{(0.5 puntos sobre 10) ¿Qué tipo de semáforos has usado para resolver el problema
-            (binarios, generales)?}
+            (binarios, generales)?}\\
+            Uno binario para proteger la selección del panel y uno general para controlar el número de paneles 
+            disponibles.
 
         \end{enumerate}
+        \newpage
     \subsection{Código Java de los ejercicios comentado}
-        \begin{lstlisting}[language=Java, title={Clase}]
+        \begin{lstlisting}[language=Java, title={Clase Main}]
+            package ejercicio2;
+
+            import java.util.Random;
+            import java.util.concurrent.Semaphore;
+
+            public class Main {
+                
+                public static final int NUMERO_DE_PANELES = 3;
+                public static final int NUMERO_DE_EQUIPOS = 10;
+                public static final int NUMERO_DE_DEPORTISTAS_POR_EQUIPO = 4;
+                public static final int NUMERO_DE_SECUENCIAS = 3;
+                public static final int NUMERO_DE_EJERCICIOS = 5;
+                public static final int INICIALIZAR_SEMAFORO_BINARIO = 1;
+                public static final int NUM_0_9 = 10;
+                
+                public static Panel[] paneles = new Panel[NUMERO_DE_PANELES];
+                public static boolean[] panelesLibres = new boolean[NUMERO_DE_PANELES];
+                public static Semaphore mutexVariablesCompartidas = 
+                    new Semaphore(INICIALIZAR_SEMAFORO_BINARIO);
+                public static Semaphore semaforoDePaneles = new Semaphore(NUMERO_DE_PANELES);
+                
+                public static Equipo[] equipos = new Equipo[NUMERO_DE_EQUIPOS];
+                
+                /**
+                * Función que le da valores aleatorios entre 0 y 9 a una matriz de 5x5,
+                * @param matriz Es la matriz que se rellenara con núevos valores aleatorios
+                */
+                public static void generarMatriz(int[][] matriz){
+                    for(int i = 0; i < NUMERO_DE_EJERCICIOS; i++) {
+                        for(int j = 0; j < NUMERO_DE_EJERCICIOS; j++) {
+                            Random random = new Random();
+                            matriz[i][j] = random.nextInt(NUM_0_9);
+                        }
+                    }
+                }
+                
+                public static void main(String[] args) {
+                    //Bucle para generar los paneles uno al lado del otro sin superponerse e 
+                    //inicializo el array de booleanos
+                    for (int numPanel = 0; numPanel < NUMERO_DE_PANELES; numPanel++) {
+                        paneles[numPanel] = new Panel(new String("Panel " + (numPanel + 1)), 
+                            (numPanel * 410), 0);
+                        panelesLibres[numPanel] = true;
+                    }
+                    
+                    for(int numEquipo = 0; numEquipo < NUMERO_DE_EQUIPOS; numEquipo++) {
+                        equipos[numEquipo] = new Equipo(numEquipo);
+                        equipos[numEquipo].start();
+                    }
+                    
+                    for(int numEquipo = 0; numEquipo < NUMERO_DE_EQUIPOS; numEquipo++) {
+                        try {
+                            equipos[numEquipo].join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+            }
+        \end{lstlisting}
+        
+        \newpage
+        \begin{lstlisting}[language=Java, title={Clase Equipo}]
+            package ejercicio2;
+
+            import java.util.Arrays;
+
+            public class Equipo extends Thread{
+                    
+                    public static final int SPRINT = 0;
+                    public static final int PRIMER_EJERCICIO_MAX = 1;
+                    
+                    private int idEquipo;
+                    
+                    public Equipo(int idEquipo) {
+                        this.idEquipo = idEquipo;
+                        }
+                    
+                    /**
+                    * Función para extraer las mejores marcas de una matriz de ejercicios
+                    * @param ejercicios
+                    * @return
+                    */
+                    private int[] mejoresMarcas(int[][] ejercicios) {
+                        int[] vectorDeMarcas = new int[Main.NUMERO_DE_EJERCICIOS];
+                        //Guardo sprint con el valor mínimo ya que es una pruba de velocidad
+                        vectorDeMarcas[SPRINT] = Arrays.stream(ejercicios[SPRINT]).min().getAsInt();
+                        //El resto de valores los guardo con el máximo salto, lanzamiento, resistencia, y 
+                        //agilidad.
+                        for(int numEjercicios = PRIMER_EJERCICIO_MAX; 
+                                numEjercicios < Main.NUMERO_DE_EJERCICIOS; numEjercicios++) {
+                            vectorDeMarcas[numEjercicios] = Arrays.stream(ejercicios[numEjercicios])
+                            .max().getAsInt();
+                        }
+                        
+                        return vectorDeMarcas;
+                    }
+                    
+                    /**
+                    * Función que recibe una matriz de 4x5 y devuelve un string con el formato necesario 
+                    * para imprimir
+                    * @param matriz matriz que va a ser transformada en string (4 filas x 5 columnas)
+                    * @return matriz transformada en string con el formato que necesito
+                    */
+                    private static String matrizToString(int[][] matriz) {
+                        String strMatriz = "";
+                        for (int i = 0; i < Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO; i++) {
+                            for (int j = 0; j < Main.NUMERO_DE_EJERCICIOS; j++) {
+                                strMatriz += matriz[i][j] + " ";
+                            }
+                            strMatriz += "\n";
+                        }
+                        return strMatriz;
+                    }
+                    
+                    
+                    @Override
+                    public void run() {
+                        
+                        //Estructura con las 4 matrices
+                        int[][][] tablaDeMatricesDeEjercicios = 
+                            new int[Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO]
+                            [Main.NUMERO_DE_EJERCICIOS][Main.NUMERO_DE_EJERCICIOS]; 
+                        
+                        //Matriz con las mejores marcas en cada deporte de cada deportista
+                        int[][] matrizResumenR = new int[Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO]
+                                [Main.NUMERO_DE_EJERCICIOS];
+                        
+                        
+                        for(int secuenciasPorEquipo = 0; secuenciasPorEquipo < Main.NUMERO_DE_SECUENCIAS;
+                                secuenciasPorEquipo++) {
+                            //Primero se genera una matriz por jugador
+                            for(int numJugadores = 0; numJugadores < Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO; 
+                                    numJugadores++) {
+                                Main.generarMatriz(tablaDeMatricesDeEjercicios[numJugadores]);
+                            }
+                            
+                            //Se seleccionan y guardan las mejores marcas de cada jugador
+                            //sprint, salto, lanzamiento, resistencia, y agilidad
+                            for(int numJugadores = 0; numJugadores < Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO; 
+                                    numJugadores++) {
+                                matrizResumenR[numJugadores] = 
+                                    mejoresMarcas(tablaDeMatricesDeEjercicios[numJugadores]);
+                            }
+                            
+                            //Bloqueo el acceso a los paneles para que solo puedan estar el mismo número de 
+                            //procesos que paneles hay.
+                            try {
+                                Main.semaforoDePaneles.acquire();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            //Bloqueo el acceso a la varible que puede ser usada por más de un proceso a la 
+                            //vez para lectura y escritura, por un semáforo binario. 
+                            try {
+                                Main.mutexVariablesCompartidas.acquire();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            //Llegado este punto hay un panel libre asegurado por lo que uso un while para 
+                            //encontrar uno.
+                            int idPanel = 0;
+                            while(Main.panelesLibres[idPanel] != true) {
+                                idPanel++;
+                            }
+                            Main.panelesLibres[idPanel] = false;
+                            // Dejo libre el semáforo binario
+                            Main.mutexVariablesCompartidas.release();
+                            
+                            String mensajeParaPanel = new String(
+                                    "Usando panel " + idPanel + " el hilo (equipo) " + idPanel + "\n\n"
+                                    + "Matriz R (Resumen del equipo " + idEquipo + ": mejores marcas=\n" 
+                                    + matrizToString(matrizResumenR) + "\n"  
+                                    + "Terminando de usar panel " + idPanel + " el hilo (equipo) " 
+                                    + idEquipo + "\n");
+                            
+                            Main.paneles[idPanel].escribir_mensaje(mensajeParaPanel);
+                            
+                            try {
+                                Main.mutexVariablesCompartidas.acquire();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            Main.panelesLibres[idPanel] = true;
+                            Main.mutexVariablesCompartidas.release();
+                            Main.semaforoDePaneles.release();
+                        }
+                    }
+
+            }
 
         \end{lstlisting}
     \newpage
@@ -593,7 +867,7 @@
         \item Dentro de la \textbf{zona de Cardio} existe una \textbf{bicicleta premium} que tiene una \textbf{cola 
         exclusiva propia}, independiente de la cola general de la zona. Un cliente puede entrar 
         en Cardio si hay alguna de las 5 máquinas libres (según el paso 2). Si el cliente desea 
-        usar la \textbf{bicicleta premium} (decisión con probabilidad del 30%) y está ocupada, deberá 
+        usar la \textbf{bicicleta premium} (decisión con probabilidad del 30\%) y está ocupada, deberá 
         esperar en la \textbf{cola exclusiva} de la bicicleta premium, incluso aunque ya esté dentro. 
         \item El entrenamiento tarda \textbf{Y milisegundos} (valor aleatorio por cliente), representado 
         mediante \textcolor{black!70}{el método Sleep() de Java}.
@@ -620,12 +894,295 @@
     }
     \subsection{Recursos no compartibles}
     \subsection{Condiciones de sincronización}
+
+    \newpage
     \subsection{Pseudocódigo comentado}
-        \begin{algorithm}
-            \TitleOfAlgo{Clase}
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase Main}
             \DontPrintSemicolon
             \SetAlgoLined
+
+            \SetKwData{Clientes}{clientes}
+            \SetKwData{MonitorTornos}{monitorTornos}
+            \SetKwData{MonitorZonas}{monitorZonas}
+            \SetKwData{MonitorPantalla}{monitorPantalla}
+            \SetKwData{TiempoMaxEnTorno}{TIEMPO\_MAX\_DE\_X\_TORNO}
+            \SetKwData{TiempoMaxEnZona}{TIEMPO\_MAX\_DE\_Y\_ZONA}
+
+            \SetKwData{numeroClientes}{NUMERO\_DE\_CLIENTES}
+
+            \SetKwFunction{Cliente}{cliente}
+
+            \KwData{\\
+                    $\Clientes : Cliente[]$\\
+                    $\MonitorTornos : MonitorTornos$\\
+                    $\MonitorZonas : MonitorZonas$\\
+                    $\MonitorPantalla : MonitorPantalla$\\
+                    $\TiempoMaxEnTorno : Entero$\\
+                    $\TiempoMaxEnZona : Entero$\\
+            }
+
+            \BlankLine
+            \tcp{Inicialización de variables globales}
+            $\numeroClientes \leftarrow 50$\;
+            $\TiempoMaxEnTorno \leftarrow 5$\;
+            $\TiempoMaxEnZona \leftarrow 10$\;
+
+            
+            \Fn{main()}{
+                \Cobegin{}{
+                    \For{$i \leftarrow 1$ \KwTo $\numeroClientes$}{
+                        \tcp{Inicialización de un hilo cliente}
+                        $\Clientes[i].\Cliente{i};$
+                    }
+                }
+            }
+
         \end{algorithm}
+        
+        \newpage
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase Cliente}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwData{MonitorTornos}{monitorTornos}
+            \SetKwData{MonitorZonas}{monitorZonas}
+            \SetKwData{MonitorPantalla}{monitorPantalla}
+
+            \SetKwData{TiempoMaxEnTorno}{TIEMPO\_MAX\_DE\_X\_TORNO}
+            \SetKwData{TiempoMaxEnZona}{TIEMPO\_MAX\_DE\_Y\_ZONA}
+            \SetKwData{IdCliente}{idCliente}
+            \SetKwData{X}{X}
+            \SetKwData{Y}{Y}
+            \SetKwData{}{}
+
+            \SetKwFunction{Cliente}{cliente}
+            \SetKwFunction{SeleccionarTorno}{seleccionarTorno}
+            \SetKwFunction{EntrarEnTorno}{entrarEnTorno}
+            \SetKwFunction{SalirDeTorno}{salirDeTorno}
+            \SetKwFunction{SeleccionarZona}{seleccionarZona}
+            \SetKwFunction{EntrarEnZona}{entrarEnZona}
+            \SetKwFunction{SalirDeZona}{salirDeZona}
+            \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
+            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
+            \SetKwFunction{UsarPantalla}{usarPantalla}
+            \SetKwFunction{Random}{random}
+
+            \KwData{\\
+                    $\X : Entero$\\
+                    $\Y : Entero$\\
+            }
+            \BlankLine
+            \tcp{Inicializar variables del cliente}
+            $\X \leftarrow \Random{1,\TiempoMaxEnTorno}$\;
+            $\Y \leftarrow \Random{1,\TiempoMaxEnZona}$\;
+
+            \Fn{cliente($\IdCliente : Entero$)}{
+                $\EntrarEnTorno{\MonitorTornos.SeleccionarTorno{\X}}$\;
+            }
+
+        \end{algorithm}
+
+        \newpage
+        \begin{algorithm}
+            \TitleOfAlgo{Clase MonitorTornos}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwData{NumeroDeTornos}{numeroDeTornos}
+            \SetKwData{TiempoEnTornos}{tiempoEnTornos}
+            \SetKwData{TornosLibres}{tornosLibres}
+            \SetKwData{ColasDeTornos}{colasDeTornos}
+
+            \SetKwFunction{SeleccionarTorno}{seleccionarTorno}
+            \SetKwFunction{EntrarEnTorno}{entrarEnTorno}
+            \SetKwFunction{SalirDeTorno}{salirDeTorno}
+            \SetKwFunction{Delay}{delay}
+            \SetKwFunction{Resume}{resume}
+
+            \KwData{\\
+                    $Privado\hspace{0.5em}\NumeroDeTornos : Entero$\\
+                    $Privado\hspace{0.5em}\TiempoEnTornos : Entero[]$\\
+                    $Privado\hspace{0.5em}\TornosLibres : Booleano[]$\\
+                    $Privado\hspace{0.5em}\ColasDeTornos : Condition[]$\\
+            }
+
+            \tcp{Inicializar variables del monitor}
+            $\NumeroDeTornos \leftarrow 3$\;
+            \For{$i \leftarrow 1$ \KwTo \NumeroDeTornos}{
+                $\TiempoEnTornos[i] \leftarrow 0$\;
+                $\TornosLibres[i] \leftarrow true$\;
+            }
+            
+            \BlankLine
+            \tcp{Funciones del monitor}
+            \Fn{\SeleccionarTorno{$X : Entero$} : Entero}{
+                \tcp{Buscar torno libre}
+                \tcp{Si no hay}
+                \tcp{buscar torno con tiempo mínimo}
+                \tcp{Sumar mi tiempo en torno}
+                \Return $idTornoSeleccionado$\;
+
+            }
+            \BlankLine
+            \Fn{\EntrarEnTorno{$idTorno : Entero$}}{
+                \While{$\TornosLibres[idTorno] = False$ }{
+                    \Delay{\ColasDeTornos[idTorno]}\;
+                }
+
+                $\TornosLibres[idTorno] \leftarrow False$\;
+            }
+            \BlankLine
+            \Fn{\SalirDeTorno{$idTorno : Entero$}}{
+                $\TornosLibres[idTorno] \leftarrow True$\;
+                \Resume{\ColasDeTornos[idTorno]}\;
+            }
+
+
+        \end{algorithm}
+
+        \newpage
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase MonitorZonasGimnasio}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwData{NumeroDeZonas}{numeroDeZonas}
+            \SetKwData{MaquinasPorZona}{maquinasPorZona}
+            \SetKwData{MaquinasPorZonaLibres}{maquinasPorZonaLibres}
+            \SetKwData{ColasDeZonas}{colasDeZonas}
+            \SetKwData{TiemposEnZonas}{tiemposEnZonas}
+            \SetKwData{MaquinasLibres}{maquinasLibres}
+
+            \SetKwData{TiempoBicicletaPremium}{tiempoBicicletaPremium}
+            \SetKwData{BicicletaPremiumLibre}{bicicletaPremiumLibre}
+            \SetKwData{ColaBicicletaPremium}{colaBicicletaPremium}
+
+            \SetKwFunction{SeleccionarZona}{seleccionarZona}
+            \SetKwFunction{EntrarEnZona}{entrarEnZona}
+            \SetKwFunction{SalirDeZona}{salirDeZona}
+            \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
+            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
+            \SetKwFunction{Delay}{delay}
+            \SetKwFunction{Resume}{resume}
+            \SetKwFunction{Random}{random}
+
+            \KwData{\\
+                    $Privado\hspace{0.5em}\NumeroDeZonas : Entero$\\
+                    $Privado\hspace{0.5em}\MaquinasPorZona : Entero$\\
+                    $Privado\hspace{0.5em}\MaquinasPorZonaLibres : Entero[]$\\
+                    $Privado\hspace{0.5em}\ColasDeZonas : Condition[]$\\
+                    $Privado\hspace{0.5em}\TiemposEnZonas : Entero[]$\\
+                    $Privado\hspace{0.5em}\MaquinasLibres : Entero$\\
+                    $Privado\hspace{0.5em}\TiempoBicicletaPremium : Entero$\\
+                    $Privado\hspace{0.5em}\BicicletaPremiumLibre : Booleano$\\
+                    $Privado\hspace{0.5em}\ColaBicicletaPremium : Condition$\\
+            }
+            \tcp{Inicializar variables del monitor}
+            $\NumeroDeZonas \leftarrow 4$\;
+            $\MaquinasPorZona \leftarrow 5$\;
+            $\MaquinasLibres \leftarrow \NumeroDeZonas * \MaquinasPorZona$\;
+            \For{$i \leftarrow 1$ \KwTo \NumeroDeZonas}{
+                $\MaquinasPorZonaLibres[i] \leftarrow \MaquinasPorZona$\;
+                $\TiemposEnZonas[i] \leftarrow 0$\;
+            }
+            $\TiempoBicicletaPremium \leftarrow 0$\;
+            $\BicicletaPremiumLibre \leftarrow true$\;
+            \tcp{Funciones del monitor}
+            \Fn{\SeleccionarZona{$Y : Entero$} : Entero[]}{
+                \tcp{Crear una lista con mínimo/s libre/s}
+                \tcp{Si no hay}
+                \tcp{Buscar zona/s con tiempo/s mínimo/s}
+                \tcp{Seleccionar candidato aleatorio}
+                \tcp{Sumar mi tiempo en zona}
+                $idZonoTiempoBiciYTiempos[TIEMPO\_BICICLETA\_PREMIUM] \leftarrow -1$\;
+                \If{$idZonaSeleccionada = CARDIO  \land \Random{1,100} \leq 30$}{
+                    $\TiempoBicicletaPremium \leftarrow TiempoBicicletaPremium + Y$\;
+                    $idZonoTiempoBiciYTiempos[TIEMPO\_BICICLETA\_PREMIUM] \leftarrow \TiempoBicicletaPremium$\;
+                }
+                \Return $idZonoTiempoBiciYTiempos$\;
+            }
+        \end{algorithm}
+
+        \newpage
+        \begin{algorithm}[H]
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwData{NumeroDeZonas}{numeroDeZonas}
+            \SetKwData{MaquinasPorZona}{maquinasPorZona}
+            \SetKwData{MaquinasPorZonaLibres}{maquinasPorZonaLibres}
+            \SetKwData{ColasDeZonas}{colasDeZonas}
+            \SetKwData{TiemposEnZonas}{tiemposEnZonas}
+            \SetKwData{MaquinasLibres}{maquinasLibres}
+
+            \SetKwData{TiempoBicicletaPremium}{tiempoBicicletaPremium}
+            \SetKwData{BicicletaPremiumLibre}{bicicletaPremiumLibre}
+            \SetKwData{ColaBicicletaPremium}{colaBicicletaPremium}
+
+            \SetKwFunction{SeleccionarZona}{seleccionarZona}
+            \SetKwFunction{EntrarEnZona}{entrarEnZona}
+            \SetKwFunction{SalirDeZona}{salirDeZona}
+            \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
+            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
+            \SetKwFunction{Delay}{delay}
+            \SetKwFunction{Resume}{resume}
+
+            \Fn{\EntrarEnZona{$idZona : Entero$}}{
+                \While{$\MaquinasPorZonaLibres[idZona] < 1$ }{
+                    \Delay{\ColasDeZonas[idZona]}\;
+                }
+
+                $\MaquinasPorZonaLibres[idZona] \leftarrow \MaquinasPorZonaLibres[idZona] - 1$\;
+                $\MaquinasLibres \leftarrow \MaquinasLibres - 1$\;
+            }
+
+            \BlankLine
+            \Fn{\SalirDeZona{$idZona : Entero$}}{
+                $\MaquinasPorZonaLibres[idZona] \leftarrow \MaquinasPorZonaLibres[idZona] + 1$\;
+                $\MaquinasLibres \leftarrow \MaquinasLibres + 1$\;
+                \Resume{\ColasDeZonas[idZona]}\;
+                \If{$idZona = CARDIO$}{
+                    \Resume{\ColaBicicletaPremium}\;
+                }
+            }
+
+            \BlankLine
+            \Fn{\EntrarEnBicicletaPremium{}}{
+                \While{$\BicicletaPremiumLibre = False \lor \MaquinasPorZonaLibres[CARDIO] < 1$}{
+                    \Delay{\ColaBicicletaPremium}\;
+                }
+                $\MaquinasPorZonaLibres[CARDIO] \leftarrow \MaquinasPorZonaLibres[CARDIO] - 1$\;
+                $\MaquinasLibres \leftarrow \MaquinasLibres - 1$\;
+                $\BicicletaPremiumLibre \leftarrow False$\;
+            }
+
+            \BlankLine
+            \Fn{\SalirDeBicicletaPremium{$Y : Entero$}}{
+                $\BicicletaPremiumLibre \leftarrow True$\;
+                $\MaquinasPorZonaLibres[CARDIO] \leftarrow \MaquinasPorZonaLibres[CARDIO] + 1$\;
+                $\MaquinasLibres \leftarrow \MaquinasLibres + 1$\;
+                $\TiempoBicicletaPremium \leftarrow TiempoBicicletaPremium - Y$\;
+                \Resume{\ColaBicicletaPremium}\;
+                \Resume{\ColasDeZonas[CARDIO]}\;
+            }
+
+
+        
+        \end{algorithm}
+
+        \newpage
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase MonitorPantalla}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwFunction{UsarPantalla}{usarPantalla}
+
+
+        \end{algorithm}
+   
     \subsection{Cuestiones planteadas en los ejercicios}
         Según las condiciones de sincronización del problema, 
         \begin{enumerate}[label=\alph*)]
