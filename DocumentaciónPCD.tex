@@ -44,11 +44,10 @@
 \SetKwProg{Fn}{Función}{}{fin}
 \SetKwProg{Cobegin}{cobegin}{}{coend}
 \SetKwProg{Funcion}{}{}{}
-% Definir el bloque Select
-\SetKwBlock{Select}{Select}{}
-% Definir la palabra clave para las guardas
-\SetKw{Or}{or}
-\SetKw{When}{when}
+
+
+
+
 
 % Configuración del encabezado
 \pagestyle{fancy}
@@ -853,6 +852,7 @@
         \end{lstlisting}
     \newpage
 \section{Ejercicio 3: Monitores}
+
     En este ejercicio se quiere simular mediante un programa concurrente la actividad en 
     un \textbf{gimnasio}. El flujo para entrenar es el siguiente: 
     \begin{enumerate}
@@ -898,8 +898,35 @@
     -------------------------------------------------------------- \\
     }
     \subsection{Recursos no compartibles}
-    \subsection{Condiciones de sincronización}
+    No se podrán compartir, cada uno de los tornos y las colas para acceder estos. Por 
+    ello un monitor se encargará de gestionar el acceso a estos el uso y su liberación.
+    
+    En el caso de las zonas de entrenamiento, tenemos el mismo problema, por lo que 
+    se usará un monitor para gestionar el acceso a las zonas y su liberación. Además 
+    de esto también se usará el mismo monitor para gestionar el acceso a la bicicleta 
+    premium y su liberación, ya que es un recurso no compartible que usa una cola 
+    condition independiente.
 
+    Además, para poder acceder a la pantalla, se usará un monitor para evitar que entre
+    más de un proceso a esta.
+
+    Uso tres monitores porque el código no se complica demasiado y cada uno de los
+    monitores son independientes entre sí. Estos recursos no compartibles podrían 
+    estar gestionados de una infinidad de maneras, siempre que se cumpla la exclusión
+    mutua en las secciones críticas.
+    \subsection{Condiciones de sincronización}
+    Para garantizar las condiciones de sincronización, se crean tres monitores: \textbf{MonitorTornos},
+    \textbf{MonitorZonas} y \textbf{MonitorPantalla}. El primero tiene un protocolo para el acceso y uso
+    de los tornos y otro para su liberación. Evitando que varios procesos accedan simultáneamente a las
+    variables de los tornos.
+
+    El segundo monitor tiene un protocolo para el acceso y uso de las zonas, otro para el uso de la 
+    bicicleta premium y un último para la liberación de la zona tras su uso. Evitando que varios procesos
+    accedan a las zonas simultáneamente o que varios lean y escriban a la vez donde no deberían.
+
+    Por último, el monitor de la pantalla se encarga de recibir lo que tiene que imprimir y usa esta
+    en exclusión mutua evitando que más de un proceso pueda acceder a la impresión por pantalla
+    al mismo tiempo.
     \newpage
     \subsection{Pseudocódigo comentado}
         \begin{algorithm}[H]
@@ -1176,18 +1203,29 @@
 
 
         \end{algorithm}
-   
+    \newpage
     \subsection{Cuestiones planteadas en los ejercicios}
         Según las condiciones de sincronización del problema, 
         \begin{enumerate}[label=\alph*)]
             \item \textbf{(0.5 puntos) Indica si la acción de entrenar es concurrente o en exclusión mutua y
-            justifica.}
-
-            \item \textbf{(0.75 puntos) ¿Qué tipo de monitor Java has usado? Justifica.}
-            
-            \item \textbf{(0.5 puntos) En el monitor, ¿has usado notify/signal o notifyAll/signalAll? Justifica}
-            
-            \item \textbf{(0.75 puntos) ¿Cómo se ha resuelto la exclusión mutua de la pantalla en este problema}
+            justifica.}\\
+            Es concurrente, ya que pueden haber varios procesos entrenando a la vez, siempre que hayan conseguido
+            una máquina libre para ello. Como el entrenamiento se simula con un sleep, este segmento de código
+            se puede realizar en paralelo junto con otros procesos que también estén entrenando, 
+            sin que esto suponga ningún problema.
+            \item \textbf{(0.75 puntos) ¿Qué tipo de monitor Java has usado? Justifica.}\\
+            He usado \textbf{condition}, ya que si uso synchronize no puedo usar más de una cola y no podría diferenciar
+            entre procesos. Y como hay procesos que quieren acceder a diferentes zonas simuladas con colas es necesario
+            usar condition. En el caso de la pantalla, como solo hay una y no necesito diferenciar entre procesos, 
+            podría usar synchronize, pero para mantener la consistencia en el código he decidido usar condition 
+            también para esta sección.
+            \item \textbf{(0.5 puntos) En el monitor, ¿has usado notify/signal o notifyAll/signalAll? Justifica}\\
+            Podría usar ambos, pero he decidido usar solo notify/signal, ya que no es necesario despertar a todos los
+            procesos que esperan en una cola, porque al final solo uno de ellos va a poder ejecutarse y el resto se 
+            volverán a bloquear en la cola.
+            \item \textbf{(0.75 puntos) ¿Cómo se ha resuelto la exclusión mutua de la pantalla en este problema}\\
+            Está resuelto con el uso de un monitor que encapsula el uso de la pantalla en un procedimiento
+            haciendo que solo un proceso pueda acceder a ella al mismo tiempo.
             
         \end{enumerate}
     \subsection{Código Java de los ejercicios comentado}
@@ -1235,6 +1273,8 @@
     mecanismo para la sincronización el paso de mensajes asíncrono. 
     \subsection{Recursos no compartibles}
     \subsection{Condiciones de sincronización}
+
+    \newpage
     \subsection{Pseudocódigo comentado}
         \begin{algorithm}[H]
             \TitleOfAlgo{Clase Main}
@@ -1247,8 +1287,15 @@
             \SetKwData{ControladorDeAcceso}{controladorDeAcceso}
             \SetKwData{ColaRapida}{COLA\_RAPIDA}
             \SetKwData{ColaLenta}{COLA\_LENTA}
-            \SetKwData{BuzonesAficionados}{buzonesAficionados}
             \SetKwData{Aficionados}{aficionados}
+
+            \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
+            \SetKwData{PedirColaRapida}{pedirColaRapida}
+            \SetKwData{PedirColaLenta}{pedirColaLenta}
+            \SetKwData{LiberarColaRapida}{liberarColaRapida}
+            \SetKwData{LiberarColaLenta}{liberarColaLenta}
+            \SetKwData{PedirPantalla}{pedirPantalla}
+            \SetKwData{LiberarPantalla}{liberarPantalla}
 
             \SetKwFunction{Aficionado}{aficionado}
 
@@ -1259,8 +1306,14 @@
                     $\ControladorDeAcceso : ControladorDeAcceso$\\
                     $\ColaRapida : Caracter$\\
                     $\ColaLenta : Caracter$\\
-                    $\BuzonesAficionados : Buzon[]$\\
                     $\Aficionados : Aficionado[]$
+                    $\DeterminarTiempoEnCola : Buzon$\\
+                    $\PedirColaRapida : Buzon$\\
+                    $\PedirColaLenta : Buzon$\\
+                    $\LiberarColaRapida : Buzon$\\
+                    $\LiberarColaLenta : Buzon$\\
+                    $\PedirPantalla : Buzon$\\
+                    $\LiberarPantalla : Buzon$\\
             }
             \BlankLine
             \tcp{Inicialización de variables globales}
@@ -1281,6 +1334,7 @@
 
         \end{algorithm}
 
+        \newpage
         \begin{algorithm}[H]
             \TitleOfAlgo{Clase Aficionado}
             \DontPrintSemicolon
@@ -1289,54 +1343,172 @@
             \SetKwData{ControladorDeAcceso}{controladorDeAcceso}
             \SetKwData{ColaRapida}{COLA\_RAPIDA}
             \SetKwData{ColaLenta}{COLA\_LENTA}
-            \SetKwData{BuzonAficionado}{buzonAficionado}
             \SetKwData{IdAficionado}{idAficionado}
+            \SetKwData{CaminarABanos}{caminarABanos}
+            \SetKwData{T}{T}
+
+            \SetKwData{BuzonAficionado}{buzonAficionado}
+            \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
+            \SetKwData{PedirColaRapida}{pedirColaRapida}
+            \SetKwData{PedirColaLenta}{pedirColaLenta}
+            \SetKwData{LiberarColaRapida}{liberarColaRapida}
+            \SetKwData{LiberarColaLenta}{liberarColaLenta}
+            \SetKwData{PedirPantalla}{pedirPantalla}
+            \SetKwData{LiberarPantalla}{liberarPantalla}
 
             \SetKwFunction{Send}{send}
             \SetKwFunction{Receive}{receive}
             \SetKwFunction{Aficionado}{aficionado}
+            \SetKwFunction{Random}{random}
 
             \KwData{\\
-                    $\IdAficionado : Entero$
+                    $\IdAficionado : Entero$\\
+                    $\CaminarABanos : Entero$
             }
 
             \Fn{aficionado{$\IdAficionado : Entero$}}{
-                \Send{$seleccionarCola$}\;
-                \Receive{$T, cola$}\;
-                \Switch{$cola$}{
-                    \Case{\ColaRapida}{
-                        \Send{$pedirColaRapida$}\;
-                        \Receive{$confirmacionColaRapida, OK$}\;
-                        \Sleep{$T$}\;
-                        \Send{$liberarColaRapida$}\;
-                    }
-                    \Case{\ColaLenta}{
-                        \Send{$pedirColaLenta$}\;
-                        \Receive{$confirmacionColaLenta, OK$}\;
-                        \Sleep{$T$}\;
-                        \Send{$liberarColaLenta$}\;
-                    }
-                
-                \Send{$pedirPantalla$}\;
-                \Receive{$confirmacionPantalla, OK$}\;
-                \tcp{Imprimir en pantalla}
-                \Send{$liberarPantalla$}\;
+                \Sleep{\Random{1, \CaminarABanos}}\;
+                \Send{$\DeterminarTiempoEnCola, null$}\;
+                \Receive{$\T$}\;
+                \uIf{$\T \leq 5$}{
+                    \Send{$\PedirColaRapida, \IdAficionado$}\;
+                    \Receive{$\BuzonAficionado, null$}\;
+                    \Sleep{$\T$}\;
+                    \Send{$\LiberarColaRapida$}\;
                 }
+                \Else{
+                    \Send{$\PedirColaLenta, \IdAficionado$}\;
+                    \Receive{$\BuzonAficionado, null$}\;
+                    \Sleep{$\T$}\;
+                    \Send{$\LiberarColaLenta$}\;
+                }
+                
+                \Send{$\PedirPantalla, \IdAficionado$}\;
+                \Receive{$\BuzonAficionado, null$}\;
+                \tcp{Imprimir en pantalla}
+                \Send{$\LiberarPantalla, null$}\;
             }
+            
 
         \end{algorithm}
 
-        \begin{algorithm}
+        \newpage
+        \begin{algorithm}[H]
             \TitleOfAlgo{Clase ControladorColaDeAcceso}
             \DontPrintSemicolon
             \SetAlgoLined
+
+            \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
+            \SetKwData{PedirColaRapida}{pedirColaRapida}
+            \SetKwData{PedirColaLenta}{pedirColaLenta}
+            \SetKwData{LiberarColaRapida}{liberarColaRapida}
+            \SetKwData{LiberarColaLenta}{liberarColaLenta}
+            \SetKwData{PedirPantalla}{pedirPantalla}
+            \SetKwData{LiberarPantalla}{liberarPantalla}
+
+            \SetKwData{ColaRapida}{COLA\_RAPIDA}
+            \SetKwData{ColaLenta}{COLA\_LENTA}
+            \SetKwData{BuzonesAficionados}{buzonesAficionados}
+
+            \SetKwData{LibreColaRapida}{libreColaRapida}
+            \SetKwData{LibreColaLenta}{libreColaLenta}
+            \SetKwData{LibrePantalla}{librePantalla}
+
+            \SetKwFunction{Send}{send}
+            \SetKwFunction{Receive}{receive}
+            \SetKwFunction{Random}{random}
+            \SetKwFunction{When}{when}
+
+            \KwData{\\
+                    $\BuzonesAficionados : Buzon[]$\\
+                    $\DeterminarTiempoEnCola : Buzon$\\
+                    $\PedirColaRapida : Buzon$\\
+                    $\PedirColaLenta : Buzon$\\
+                    $\LiberarColaRapida : Buzon$\\
+                    $\LiberarColaLenta : Buzon$\\
+                    $\PedirPantalla : Buzon$\\
+                    $\LiberarPantalla : Buzon$\\
+                    $\LibreColaRapida : Booleano$\\
+                    $\LibreColaLenta : Booleano$\\
+                    $\LibrePantalla : Booleano$\\
+            }
+            \BlankLine
+            \tcp{Inicializar booleanos de guardas}
+            $\LibreColaRapida \leftarrow true$\;
+            $\LibreColaLenta \leftarrow true$\;
+            $\LibrePantalla \leftarrow true$\;
+            \BlankLine
         \end{algorithm}
 
-        \begin{algorithm}
-            \TitleOfAlgo{Clase}
+        \newpage
+        \begin{algorithm}[H]
             \DontPrintSemicolon
             \SetAlgoLined
+            
+            \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
+            \SetKwData{PedirColaRapida}{pedirColaRapida}
+            \SetKwData{PedirColaLenta}{pedirColaLenta}
+            \SetKwData{LiberarColaRapida}{liberarColaRapida}
+            \SetKwData{LiberarColaLenta}{liberarColaLenta}
+            \SetKwData{PedirPantalla}{pedirPantalla}
+            \SetKwData{LiberarPantalla}{liberarPantalla}
+
+            \SetKwData{ColaRapida}{COLA\_RAPIDA}
+            \SetKwData{ColaLenta}{COLA\_LENTA}
+            \SetKwData{BuzonesAficionados}{buzonesAficionados}
+
+            \SetKwData{LibreColaRapida}{libreColaRapida}
+            \SetKwData{LibreColaLenta}{libreColaLenta}
+            \SetKwData{LibrePantalla}{librePantalla}
+
+            \SetKwFunction{Send}{send}
+            \SetKwFunction{Receive}{receive}
+            \SetKwFunction{Random}{random}
+            \SetKwFunction{When}{when}
+
+            \Fn{controladorColaDeAcceso()}{
+                \Funcion{while(true)}{
+                    \Funcion{select}{
+                        
+                        \hspace*{1em}\tcp{Selector para pedir tiempo de validación}
+                        \hspace*{1em}\Receive{$\DeterminarTiempoEnCola, idAficionado$}\;
+                        \hspace*{1em}$T \leftarrow \Random{1,10}$\;
+                        \hspace*{1em}$\Send{\BuzonesAficionados[idAficionado], T}$\;
+
+                        or\hspace*{1em}\tcp{Selector de cola rápida con guarda}
+                        \hspace*{1em}\When $\LibreColaRapida = true  =>$\;
+                        \hspace*{1em}\Receive{$\PedirColaRapida, idAficionado$}\;
+                        \hspace*{1em}$\LibreColaRapida \leftarrow false$\;
+                        \hspace*{1em}$\Send{\BuzonesAficionados[idAficionado], null}$\;
+
+                        or\hspace*{1em}\tcp{Selector de cola lenta con guarda}
+                        \hspace*{1em}\When $\LibreColaLenta = true  =>$\;
+                        \hspace*{1em}\Receive{$\PedirColaLenta, idAficionado$}\;
+                        \hspace*{1em}$\LibreColaLenta \leftarrow false$\;
+                        \hspace*{1em}$\Send{\BuzonesAficionados[idAficionado], null}$\;
+
+                        or\hspace*{1em}\tcp{Selector para pedir pantalla con guarda}
+                        \hspace*{1em}\When $\LibrePantalla = true  =>$\;
+                        \hspace*{1em}\Receive{$\PedirPantalla, idAficionado$}\;
+                        \hspace*{1em}$\LibrePantalla \leftarrow false$\;
+
+                        or \hspace*{1em}\tcp{Selector para salir de cola rápida}
+                        \hspace*{1em}\Receive{$\LiberarColaRapida$}\;
+                        \hspace*{1em}$\LibreColaRapida \leftarrow true$\;
+                        
+                        or \hspace*{1em}\tcp{Selector para salir de cola lenta}
+                        \hspace*{1em}\Receive{$\LiberarColaLenta$}\;
+                        \hspace*{1em}$\LibreColaLenta \leftarrow true$\;
+                        
+                        or \hspace*{1em}\tcp{Selector para salir de pantalla}
+                        \hspace*{1em}\Receive{$\LiberarPantalla$}\;
+                        \hspace*{1em}$\LibrePantalla \leftarrow true$\;
+                    }
+                }
+            }
         \end{algorithm}
+    
+    \newpage
     \subsection{Cuestiones planteadas en los ejercicios}
         \begin{enumerate}[label=\alph*)]
             \item \textbf{(0.5 puntos sobre 10) ¿Se pueden usar simultáneamente los dos tornos? Justifica la
