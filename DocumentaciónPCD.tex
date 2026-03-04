@@ -1340,6 +1340,7 @@
             \DontPrintSemicolon
             \SetAlgoLined
 
+            \SetKwData{NumeroDeIteraciones}{NUMERO\_DE\_ITERACIONES}
             \SetKwData{ControladorDeAcceso}{controladorDeAcceso}
             \SetKwData{ColaRapida}{COLA\_RAPIDA}
             \SetKwData{ColaLenta}{COLA\_LENTA}
@@ -1367,26 +1368,28 @@
             }
 
             \Fn{aficionado{$\IdAficionado : Entero$}}{
-                \Sleep{\Random{1, \CaminarABanos}}\;
-                \Send{$\DeterminarTiempoEnCola, null$}\;
-                \Receive{$\T$}\;
-                \uIf{$\T \leq 5$}{
-                    \Send{$\PedirColaRapida, \IdAficionado$}\;
+                \For{$i \leftarrow 1$ \KwTo $\NumeroDeIteraciones$}{
+                    \Sleep{\Random{1, \CaminarABanos}}\;
+                    \Send{$\DeterminarTiempoEnCola, null$}\;
+                    \Receive{$\T$}\;
+                    \uIf{$\T \leq 5$}{
+                        \Send{$\PedirColaRapida, \IdAficionado$}\;
+                        \Receive{$\BuzonAficionado, null$}\;
+                        \Sleep{$\T$}\;
+                        \Send{$\LiberarColaRapida$}\;
+                    }
+                    \Else{
+                        \Send{$\PedirColaLenta, \IdAficionado$}\;
+                        \Receive{$\BuzonAficionado, null$}\;
+                        \Sleep{$\T$}\;
+                        \Send{$\LiberarColaLenta$}\;
+                    }
+                    
+                    \Send{$\PedirPantalla, \IdAficionado$}\;
                     \Receive{$\BuzonAficionado, null$}\;
-                    \Sleep{$\T$}\;
-                    \Send{$\LiberarColaRapida$}\;
+                    \tcp{Imprimir en pantalla}
+                    \Send{$\LiberarPantalla, null$}\;
                 }
-                \Else{
-                    \Send{$\PedirColaLenta, \IdAficionado$}\;
-                    \Receive{$\BuzonAficionado, null$}\;
-                    \Sleep{$\T$}\;
-                    \Send{$\LiberarColaLenta$}\;
-                }
-                
-                \Send{$\PedirPantalla, \IdAficionado$}\;
-                \Receive{$\BuzonAficionado, null$}\;
-                \tcp{Imprimir en pantalla}
-                \Send{$\LiberarPantalla, null$}\;
             }
             
 
