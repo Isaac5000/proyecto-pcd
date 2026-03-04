@@ -955,7 +955,6 @@
             \SetKwData{IdCliente}{idCliente}
             \SetKwData{X}{X}
             \SetKwData{Y}{Y}
-            \SetKwData{}{}
 
             \SetKwFunction{Cliente}{cliente}
             \SetKwFunction{SeleccionarTorno}{seleccionarTorno}
@@ -968,6 +967,7 @@
             \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
             \SetKwFunction{UsarPantalla}{usarPantalla}
             \SetKwFunction{Random}{random}
+            \SetKwFunction{Sleep}{sleep}
 
             \KwData{\\
                     $\X : Entero$\\
@@ -979,7 +979,27 @@
             $\Y \leftarrow \Random{1,\TiempoMaxEnZona}$\;
 
             \Fn{cliente($\IdCliente : Entero$)}{
-                $\EntrarEnTorno{\MonitorTornos.SeleccionarTorno{\X}}$\;
+                $idTorno \leftarrow \MonitorTornos.\SeleccionarTorno{\X}$\;
+                $\MonitorTornos.\EntrarEnTorno{idTorno}$\;
+                $\Sleep{\X}$\;
+                $\MonitorTornos.\SalirDeTorno{idTorno}$\;
+
+                \tcp{Seleccion de zona}
+                ToDo\;
+
+                \If{Cliente desea usar bicicleta premium}{
+                     $\MonitorZonas.\EntrarEnBicicletaPremium{}$\;
+                     $\Sleep{\Y}$\;
+                     $\MonitorZonas.\SalirDeBicicletaPremium{idZona}$\;
+                } 
+                \Else {
+                    $\MonitorZonas.\EntrarEnZona{idZona}$\;
+                    $\Sleep{\Y}$\;
+                    $\MonitorZonas.\SalirDeZona{idZona}$\;
+                }
+                \tcp{Crear mensaje}
+                $\UsarPantalla{mensaje}\;$
+                
             }
 
         \end{algorithm}
@@ -1179,6 +1199,10 @@
             \SetAlgoLined
 
             \SetKwFunction{UsarPantalla}{usarPantalla}
+
+            \Fn{\UsarPantalla{$mensaje : String$}}{
+                \tcp{Imprimir mensaje en pantalla}
+            }
 
 
         \end{algorithm}
