@@ -44,6 +44,11 @@
 \SetKwProg{Fn}{Función}{}{fin}
 \SetKwProg{Cobegin}{cobegin}{}{coend}
 \SetKwProg{Funcion}{}{}{}
+% Definir el bloque Select
+\SetKwBlock{Select}{Select}{}
+% Definir la palabra clave para las guardas
+\SetKw{Or}{or}
+\SetKw{When}{when}
 
 % Configuración del encabezado
 \pagestyle{fancy}
@@ -926,7 +931,7 @@
             \tcp{Inicialización de variables globales}
             $\numeroClientes \leftarrow 50$\;
             $\TiempoMaxEnTorno \leftarrow 5$\;
-            $\TiempoMaxEnZona \leftarrow 10$\;
+            $\TiempoMaxEnZona \leftarrow 5$\;
 
             
             \Fn{main()}{
@@ -957,14 +962,12 @@
             \SetKwData{Y}{Y}
 
             \SetKwFunction{Cliente}{cliente}
-            \SetKwFunction{SeleccionarTorno}{seleccionarTorno}
+            \SetKwFunction{SeleccionarYUsarTorno}{seleccionarYUsarTorno}
             \SetKwFunction{EntrarEnTorno}{entrarEnTorno}
             \SetKwFunction{SalirDeTorno}{salirDeTorno}
-            \SetKwFunction{SeleccionarZona}{seleccionarZona}
-            \SetKwFunction{EntrarEnZona}{entrarEnZona}
+            \SetKwFunction{AccederAZona}{accederAZona}
             \SetKwFunction{SalirDeZona}{salirDeZona}
             \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
-            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
             \SetKwFunction{UsarPantalla}{usarPantalla}
             \SetKwFunction{Random}{random}
             \SetKwFunction{Sleep}{sleep}
@@ -979,26 +982,23 @@
             $\Y \leftarrow \Random{1,\TiempoMaxEnZona}$\;
 
             \Fn{cliente($\IdCliente : Entero$)}{
-                $idTorno \leftarrow \MonitorTornos.\SeleccionarTorno{\X}$\;
-                $\MonitorTornos.\EntrarEnTorno{idTorno}$\;
+                $idTorno \leftarrow \MonitorTornos.\SeleccionarYUsarTorno{\X}$\;
                 $\Sleep{\X}$\;
-                $\MonitorTornos.\SalirDeTorno{idTorno}$\;
-
-                \tcp{Seleccion de zona}
-                ToDo\;
-
-                \If{Cliente desea usar bicicleta premium}{
-                     $\MonitorZonas.\EntrarEnBicicletaPremium{}$\;
-                     $\Sleep{\Y}$\;
-                     $\MonitorZonas.\SalirDeBicicletaPremium{idZona}$\;
-                } 
-                \Else {
-                    $\MonitorZonas.\EntrarEnZona{idZona}$\;
-                    $\Sleep{\Y}$\;
-                    $\MonitorZonas.\SalirDeZona{idZona}$\;
+                $\MonitorTornos.\SalirDeTorno{\X, idTorno}$\;
+                $idZonaYTiempos \leftarrow \MonitorZonas.\AccederAZona{\Y}$\;
+                
+                usarBicicletaPremium $\leftarrow$ false\;
+                \If{$idZonaYTiempos[0] = CARDIO$}{
+                    usarBicicletaPremium $\leftarrow$ \Random{1,10} $\leq$ 3\;
                 }
+                
                 \tcp{Crear mensaje}
-                $\UsarPantalla{mensaje}\;$
+                $\MonitorPantalla.\UsarPantalla{mensaje}$\;
+                \If{usarBicicletaPremium} {
+                    $\MonitorZonas.\EntrarEnBicicletaPremium{}$\;
+                } 
+                $\Sleep{\Y}$\;
+                $\MonitorZonas.\SalirDeZona{\Y, idZona, usarBicicletaPremium}$\;
                 
             }
 
@@ -1015,7 +1015,7 @@
             \SetKwData{TornosLibres}{tornosLibres}
             \SetKwData{ColasDeTornos}{colasDeTornos}
 
-            \SetKwFunction{SeleccionarTorno}{seleccionarTorno}
+            \SetKwFunction{SeleccionarYUsarTorno}{seleccionarYUsarTorno}
             \SetKwFunction{EntrarEnTorno}{entrarEnTorno}
             \SetKwFunction{SalirDeTorno}{salirDeTorno}
             \SetKwFunction{Delay}{delay}
@@ -1034,28 +1034,25 @@
                 $\TiempoEnTornos[i] \leftarrow 0$\;
                 $\TornosLibres[i] \leftarrow true$\;
             }
-            
-            \BlankLine
             \tcp{Funciones del monitor}
-            \Fn{\SeleccionarTorno{$X : Entero$} : Entero}{
+            \BlankLine
+            \Fn{\SeleccionarYUsarTorno{$idTorno : Entero$} : Entero}{
                 \tcp{Buscar torno libre}
                 \tcp{Si no hay}
                 \tcp{buscar torno con tiempo mínimo}
                 \tcp{Sumar mi tiempo en torno}
-                \Return $idTornoSeleccionado$\;
-
-            }
-            \BlankLine
-            \Fn{\EntrarEnTorno{$idTorno : Entero$}}{
-                \While{$\TornosLibres[idTorno] = False$ }{
-                    \Delay{\ColasDeTornos[idTorno]}\;
+                \If{$\TornosLibres[idTornoSeleccionado] = False$ }{
+                    \Delay{\ColasDeTornos[$idTornoSeleccionado$]}\;
                 }
 
-                $\TornosLibres[idTorno] \leftarrow False$\;
+                $\TornosLibres[idTornoSeleccionado] \leftarrow False$\;
+
+                \Return $idTornoSeleccionado$\;
             }
             \BlankLine
-            \Fn{\SalirDeTorno{$idTorno : Entero$}}{
+            \Fn{\SalirDeTorno{$X : Entero , idTorno : Entero$}}{
                 $\TornosLibres[idTorno] \leftarrow True$\;
+                $\TiempoEnTornos[idTorno] \leftarrow \TiempoEnTornos[idTorno] - X$\;
                 \Resume{\ColasDeTornos[idTorno]}\;
             }
 
@@ -1073,17 +1070,14 @@
             \SetKwData{MaquinasPorZonaLibres}{maquinasPorZonaLibres}
             \SetKwData{ColasDeZonas}{colasDeZonas}
             \SetKwData{TiemposEnZonas}{tiemposEnZonas}
-            \SetKwData{MaquinasLibres}{maquinasLibres}
 
-            \SetKwData{TiempoBicicletaPremium}{tiempoBicicletaPremium}
             \SetKwData{BicicletaPremiumLibre}{bicicletaPremiumLibre}
             \SetKwData{ColaBicicletaPremium}{colaBicicletaPremium}
 
-            \SetKwFunction{SeleccionarZona}{seleccionarZona}
+            \SetKwFunction{AccederAZona}{accederAZona}
             \SetKwFunction{EntrarEnZona}{entrarEnZona}
             \SetKwFunction{SalirDeZona}{salirDeZona}
             \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
-            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
             \SetKwFunction{Delay}{delay}
             \SetKwFunction{Resume}{resume}
             \SetKwFunction{Random}{random}
@@ -1094,34 +1088,32 @@
                     $Privado\hspace{0.5em}\MaquinasPorZonaLibres : Entero[]$\\
                     $Privado\hspace{0.5em}\ColasDeZonas : Condition[]$\\
                     $Privado\hspace{0.5em}\TiemposEnZonas : Entero[]$\\
-                    $Privado\hspace{0.5em}\MaquinasLibres : Entero$\\
-                    $Privado\hspace{0.5em}\TiempoBicicletaPremium : Entero$\\
                     $Privado\hspace{0.5em}\BicicletaPremiumLibre : Booleano$\\
                     $Privado\hspace{0.5em}\ColaBicicletaPremium : Condition$\\
             }
             \tcp{Inicializar variables del monitor}
             $\NumeroDeZonas \leftarrow 4$\;
             $\MaquinasPorZona \leftarrow 5$\;
-            $\MaquinasLibres \leftarrow \NumeroDeZonas * \MaquinasPorZona$\;
             \For{$i \leftarrow 1$ \KwTo \NumeroDeZonas}{
                 $\MaquinasPorZonaLibres[i] \leftarrow \MaquinasPorZona$\;
                 $\TiemposEnZonas[i] \leftarrow 0$\;
             }
-            $\TiempoBicicletaPremium \leftarrow 0$\;
             $\BicicletaPremiumLibre \leftarrow true$\;
             \tcp{Funciones del monitor}
-            \Fn{\SeleccionarZona{$Y : Entero$} : Entero[]}{
-                \tcp{Crear una lista con mínimo/s libre/s}
+            \Fn{\AccederAZona{$Y : Entero$} : Entero[]}{
+                \tcp{Buscar primera zona libre}
                 \tcp{Si no hay}
-                \tcp{Buscar zona/s con tiempo/s mínimo/s}
-                \tcp{Seleccionar candidato aleatorio}
-                \tcp{Sumar mi tiempo en zona}
-                $idZonoTiempoBiciYTiempos[TIEMPO\_BICICLETA\_PREMIUM] \leftarrow -1$\;
-                \If{$idZonaSeleccionada = CARDIO  \land \Random{1,100} \leq 30$}{
-                    $\TiempoBicicletaPremium \leftarrow TiempoBicicletaPremium + Y$\;
-                    $idZonoTiempoBiciYTiempos[TIEMPO\_BICICLETA\_PREMIUM] \leftarrow \TiempoBicicletaPremium$\;
+                \tcp{Buscar primera zona con menor tiempo}
+                \tcp{Guardo todos los tiempos}
+                \tcp{Sumo mi tiempo en zona zona elegida}
+                \tcp{Guardo idZona}
+                \If{$\MaquinasPorZonaLibres[idZona] < 1$ }{
+                    \Delay{\ColasDeZonas[idZona]}\;
                 }
-                \Return $idZonoTiempoBiciYTiempos$\;
+
+                $\MaquinasPorZonaLibres[idZona] \leftarrow \MaquinasPorZonaLibres[idZona] - 1$\;
+
+                \Return $idZonaYTiempos$\;
             }
         \end{algorithm}
 
@@ -1135,59 +1127,37 @@
             \SetKwData{MaquinasPorZonaLibres}{maquinasPorZonaLibres}
             \SetKwData{ColasDeZonas}{colasDeZonas}
             \SetKwData{TiemposEnZonas}{tiemposEnZonas}
-            \SetKwData{MaquinasLibres}{maquinasLibres}
 
-            \SetKwData{TiempoBicicletaPremium}{tiempoBicicletaPremium}
             \SetKwData{BicicletaPremiumLibre}{bicicletaPremiumLibre}
             \SetKwData{ColaBicicletaPremium}{colaBicicletaPremium}
 
-            \SetKwFunction{SeleccionarZona}{seleccionarZona}
-            \SetKwFunction{EntrarEnZona}{entrarEnZona}
+            \SetKwFunction{AccederAZona}{accederAZona}
             \SetKwFunction{SalirDeZona}{salirDeZona}
             \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
-            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
             \SetKwFunction{Delay}{delay}
             \SetKwFunction{Resume}{resume}
 
-            \Fn{\EntrarEnZona{$idZona : Entero$}}{
-                \While{$\MaquinasPorZonaLibres[idZona] < 1$ }{
-                    \Delay{\ColasDeZonas[idZona]}\;
-                }
-
-                $\MaquinasPorZonaLibres[idZona] \leftarrow \MaquinasPorZonaLibres[idZona] - 1$\;
-                $\MaquinasLibres \leftarrow \MaquinasLibres - 1$\;
-            }
-
-            \BlankLine
-            \Fn{\SalirDeZona{$idZona : Entero$}}{
-                $\MaquinasPorZonaLibres[idZona] \leftarrow \MaquinasPorZonaLibres[idZona] + 1$\;
-                $\MaquinasLibres \leftarrow \MaquinasLibres + 1$\;
-                \Resume{\ColasDeZonas[idZona]}\;
-                \If{$idZona = CARDIO$}{
-                    \Resume{\ColaBicicletaPremium}\;
-                }
-            }
-
             \BlankLine
             \Fn{\EntrarEnBicicletaPremium{}}{
-                \While{$\BicicletaPremiumLibre = False \lor \MaquinasPorZonaLibres[CARDIO] < 1$}{
+                \If{$\BicicletaPremiumLibre = False$}{
                     \Delay{\ColaBicicletaPremium}\;
                 }
-                $\MaquinasPorZonaLibres[CARDIO] \leftarrow \MaquinasPorZonaLibres[CARDIO] - 1$\;
-                $\MaquinasLibres \leftarrow \MaquinasLibres - 1$\;
                 $\BicicletaPremiumLibre \leftarrow False$\;
             }
 
             \BlankLine
-            \Fn{\SalirDeBicicletaPremium{$Y : Entero$}}{
-                $\BicicletaPremiumLibre \leftarrow True$\;
-                $\MaquinasPorZonaLibres[CARDIO] \leftarrow \MaquinasPorZonaLibres[CARDIO] + 1$\;
-                $\MaquinasLibres \leftarrow \MaquinasLibres + 1$\;
-                $\TiempoBicicletaPremium \leftarrow TiempoBicicletaPremium - Y$\;
-                \Resume{\ColaBicicletaPremium}\;
-                \Resume{\ColasDeZonas[CARDIO]}\;
+            \Fn{\SalirDeZona{$Y : Entero , idZona : Entero , bicicletaPremium : Booleano$}}{
+                $\MaquinasPorZonaLibres[idZona] \leftarrow \MaquinasPorZonaLibres[idZona] + 1$\;
+                $\TiemposEnZonas[idZona] \leftarrow \TiemposEnZonas[idZona] - Y$\;
+                \uIf{$bicicletaPremium = True$}{
+                    $\BicicletaPremiumLibre \leftarrow True$\;
+                    \Resume{\ColaBicicletaPremium}\;
+                }
+                \ElseIf{\ColasDeZonas[idZona] = CARDIO}{
+                    \Resume{\ColaBicicletaPremium}\;
+                }
+                \Resume{\ColasDeZonas[idZona]}\;
             }
-
 
         
         \end{algorithm}
@@ -1266,6 +1236,102 @@
     \subsection{Recursos no compartibles}
     \subsection{Condiciones de sincronización}
     \subsection{Pseudocódigo comentado}
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase Main}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwData{NumeroDeAficionados}{NUMERO\_DE\_AFICIONADOS}
+            \SetKwData{NumeroDeIteraciones}{NUMERO\_DE\_ITERACIONES}
+            \SetKwData{NumeroDeAccionesPorIteracion}{NUMERO\_DE\_ACCIONES\_POR\_ITERACION}
+            \SetKwData{ControladorDeAcceso}{controladorDeAcceso}
+            \SetKwData{ColaRapida}{COLA\_RAPIDA}
+            \SetKwData{ColaLenta}{COLA\_LENTA}
+            \SetKwData{BuzonesAficionados}{buzonesAficionados}
+            \SetKwData{Aficionados}{aficionados}
+
+            \SetKwFunction{Aficionado}{aficionado}
+
+            \KwData{\\
+                    $\NumeroDeAficionados : Entero$\\
+                    $\NumeroDeIteraciones : Entero$\\
+                    $\NumeroDeAccionesPorIteracion : Entero$\\
+                    $\ControladorDeAcceso : ControladorDeAcceso$\\
+                    $\ColaRapida : Caracter$\\
+                    $\ColaLenta : Caracter$\\
+                    $\BuzonesAficionados : Buzon[]$\\
+                    $\Aficionados : Aficionado[]$
+            }
+            \BlankLine
+            \tcp{Inicialización de variables globales}
+            $\NumeroDeAficionados \leftarrow 50$\;
+            $\NumeroDeIteraciones \leftarrow 5$\;
+            $\NumeroDeAccionesPorIteracion \leftarrow  5$\;
+            $\ColaRapida \leftarrow 'R'$\;
+            $\ColaLenta \leftarrow 'L'$\;
+
+            \Fn{main()}{
+                \Cobegin{}{
+                    \For{$i \leftarrow 1$ \KwTo $\NumeroDeAficionados$}{
+                        \tcp{Inicialización de un hilo aficionado}
+                        $\Aficionados[i].\Aficionado{i};$
+                    }
+                }
+            }
+
+        \end{algorithm}
+
+        \begin{algorithm}[H]
+            \TitleOfAlgo{Clase Aficionado}
+            \DontPrintSemicolon
+            \SetAlgoLined
+
+            \SetKwData{ControladorDeAcceso}{controladorDeAcceso}
+            \SetKwData{ColaRapida}{COLA\_RAPIDA}
+            \SetKwData{ColaLenta}{COLA\_LENTA}
+            \SetKwData{BuzonAficionado}{buzonAficionado}
+            \SetKwData{IdAficionado}{idAficionado}
+
+            \SetKwFunction{Send}{send}
+            \SetKwFunction{Receive}{receive}
+            \SetKwFunction{Aficionado}{aficionado}
+
+            \KwData{\\
+                    $\IdAficionado : Entero$
+            }
+
+            \Fn{aficionado{$\IdAficionado : Entero$}}{
+                \Send{$seleccionarCola$}\;
+                \Receive{$T, cola$}\;
+                \Switch{$cola$}{
+                    \Case{\ColaRapida}{
+                        \Send{$pedirColaRapida$}\;
+                        \Receive{$confirmacionColaRapida, OK$}\;
+                        \Sleep{$T$}\;
+                        \Send{$liberarColaRapida$}\;
+                    }
+                    \Case{\ColaLenta}{
+                        \Send{$pedirColaLenta$}\;
+                        \Receive{$confirmacionColaLenta, OK$}\;
+                        \Sleep{$T$}\;
+                        \Send{$liberarColaLenta$}\;
+                    }
+                
+                \Send{$pedirPantalla$}\;
+                \Receive{$confirmacionPantalla, OK$}\;
+                \tcp{Imprimir en pantalla}
+                \Send{$liberarPantalla$}\;
+                }
+            }
+
+        \end{algorithm}
+
+        \begin{algorithm}
+            \TitleOfAlgo{Clase ControladorColaDeAcceso}
+            \DontPrintSemicolon
+            \SetAlgoLined
+        \end{algorithm}
+
         \begin{algorithm}
             \TitleOfAlgo{Clase}
             \DontPrintSemicolon
