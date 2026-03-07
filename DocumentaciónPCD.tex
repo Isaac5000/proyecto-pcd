@@ -852,7 +852,7 @@
         \end{lstlisting}
     \newpage
 \section{Ejercicio 3: Monitores}
-
+\iffalse
     En este ejercicio se quiere simular mediante un programa concurrente la actividad en 
     un \textbf{gimnasio}. El flujo para entrenar es el siguiente: 
     \begin{enumerate}
@@ -897,9 +897,10 @@
     Espera bicicleta premium (si aplica)=---- \\
     -------------------------------------------------------------- \\
     }
+    \fi
     \subsection{Recursos no compartibles}
     No se podrán compartir, cada uno de los tornos y las colas para acceder estos. Por 
-    ello un monitor se encargará de gestionar el acceso a estos el uso y su liberación.
+    ello un monitor se encargará de gestionar el acceso a estos, el uso y su liberación.
     
     En el caso de las zonas de entrenamiento, tenemos el mismo problema, por lo que 
     se usará un monitor para gestionar el acceso a las zonas y su liberación. Además 
@@ -924,8 +925,8 @@
     bicicleta premium y un último para la liberación de la zona tras su uso. Evitando que varios procesos
     accedan a las zonas simultáneamente o que varios lean y escriban a la vez donde no deberían.
 
-    Por último, el monitor de la pantalla se encarga de recibir lo que tiene que imprimir y usa esta
-    en exclusión mutua evitando que más de un proceso pueda acceder a la impresión por pantalla
+    Por último, el monitor de la pantalla se encarga de recibir lo que tiene que imprimir y usa esto
+    en exclusión mutua, evitando que más de un proceso pueda acceder a la impresión por pantalla
     al mismo tiempo.
     \newpage
     \subsection{Pseudocódigo comentado}
@@ -1033,7 +1034,7 @@
 
         \newpage
         \begin{algorithm}
-            \TitleOfAlgo{Clase MonitorTornos}
+            \TitleOfAlgo{Monitor Tornos}
             \DontPrintSemicolon
             \SetAlgoLined
 
@@ -1088,7 +1089,7 @@
 
         \newpage
         \begin{algorithm}[H]
-            \TitleOfAlgo{Clase MonitorZonasGimnasio}
+            \TitleOfAlgo{Monitor ZonasGimnasio}
             \DontPrintSemicolon
             \SetAlgoLined
 
@@ -1191,7 +1192,7 @@
 
         \newpage
         \begin{algorithm}[H]
-            \TitleOfAlgo{Clase MonitorPantalla}
+            \TitleOfAlgo{Monitor Pantalla}
             \DontPrintSemicolon
             \SetAlgoLined
 
@@ -1228,6 +1229,7 @@
             haciendo que solo un proceso pueda acceder a ella al mismo tiempo.
             
         \end{enumerate}
+    \newpage
     \subsection{Código Java de los ejercicios comentado}
         \begin{lstlisting}[language=Java, title={Clase}]
 
@@ -1235,6 +1237,7 @@
 
     \newpage
     \section{Ejercicio 4: Paso de Mensajes Asíncrono}
+    \iffalse
     Consideremos un conjunto de 50 aficionados que llegan a un estadio de fútbol para entrar a un 
     partido y deben pasar por el control de acceso tras validar su entrada. Para acceder hay dos 
     tornos con sus respectivas colas: la cola R y la cola L, siendo la cola R más rápida que la L (por 
@@ -1270,10 +1273,34 @@
     donde X es la cola asignada y T el tiempo de validación. 
     \end{enumerate}
     Desarrollar un programa concurrente en Java para resolver el problema anterior usando como 
-    mecanismo para la sincronización el paso de mensajes asíncrono. 
+    mecanismo para la sincronización el paso de mensajes asíncrono.
+    \fi
     \subsection{Recursos no compartibles}
+    Los recursos no compartibles son las colas, tanto la rápida como la lenta y la 
+    pantalla.
     \subsection{Condiciones de sincronización}
+    Las condiciones de sincronización se garantizan gracias al uso de un 
+    controlador que simula el paso de mensajes asíncrono, este tiene condiciones
+    de guarda en los casos del uso de los recursos no compartibles.
+    De esta forma, se garantiza la exclusión mutua mientras un proceso use uno de 
+    estos recursos.
 
+    En el caso de la asignación de un tiempo no es necesarío una condición de 
+    guarda porque no se esta protegiendo ningún recurso. Para liberar una cola y 
+    liberar la pantalla, no es necesario aplicar condiciones de guarda, ya que 
+    solo hará una de estas acciones un proceso que previamente halla accedido a 
+    uno de estos recursos.
+
+    Dicho todo esto solo es necesario aplicar condiciones de guarda para el uso
+    de colas y el uso de pantalla.
+
+    Además al ser paso de mensajes asíncrono, en algunos casos, es necesario 
+    sincronizar al \textbf{controlador} con el \textbf{aficionado}, y al no haber
+    \textbf{sends} bloqueantes se simulan con el uso de \textbf{receive} justo después
+    del send, haciendo así que el proceso espere a la contestación del controlador.
+    El uso de este mecanismo solo es necesario al pedir un tiempo, al pedir una cola y
+    al pedir la pantalla. Para su liberación no es necesario, ya que el aficionado no 
+    necesita esperar a que el controlador le confirme que ha liberado el recurso.
     \newpage
     \subsection{Pseudocódigo comentado}
         \begin{algorithm}[H]
@@ -1282,12 +1309,9 @@
             \SetAlgoLined
 
             \SetKwData{NumeroDeAficionados}{NUMERO\_DE\_AFICIONADOS}
-            \SetKwData{NumeroDeIteraciones}{NUMERO\_DE\_ITERACIONES}
-            \SetKwData{NumeroDeAccionesPorIteracion}{NUMERO\_DE\_ACCIONES\_POR\_ITERACION}
             \SetKwData{ControladorDeAcceso}{controladorDeAcceso}
-            \SetKwData{ColaRapida}{COLA\_RAPIDA}
-            \SetKwData{ColaLenta}{COLA\_LENTA}
             \SetKwData{Aficionados}{aficionados}
+            \SetKwData{BuzonesAficionados}{buzonesAficionados}
 
             \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
             \SetKwData{PedirColaRapida}{pedirColaRapida}
@@ -1301,12 +1325,9 @@
 
             \KwData{\\
                     $\NumeroDeAficionados : Entero$\\
-                    $\NumeroDeIteraciones : Entero$\\
-                    $\NumeroDeAccionesPorIteracion : Entero$\\
                     $\ControladorDeAcceso : ControladorDeAcceso$\\
-                    $\ColaRapida : Caracter$\\
-                    $\ColaLenta : Caracter$\\
-                    $\Aficionados : Aficionado[]$
+                    $\Aficionados : Aficionado[]$\\
+                    $\BuzonesAficionados : Buzon[]$\\
                     $\DeterminarTiempoEnCola : Buzon$\\
                     $\PedirColaRapida : Buzon$\\
                     $\PedirColaLenta : Buzon$\\
@@ -1318,13 +1339,10 @@
             \BlankLine
             \tcp{Inicialización de variables globales}
             $\NumeroDeAficionados \leftarrow 50$\;
-            $\NumeroDeIteraciones \leftarrow 5$\;
-            $\NumeroDeAccionesPorIteracion \leftarrow  5$\;
-            $\ColaRapida \leftarrow 'R'$\;
-            $\ColaLenta \leftarrow 'L'$\;
 
             \Fn{main()}{
                 \Cobegin{}{
+                    \ControladorDeAcceso.iniciar()\;
                     \For{$i \leftarrow 1$ \KwTo $\NumeroDeAficionados$}{
                         \tcp{Inicialización de un hilo aficionado}
                         $\Aficionados[i].\Aficionado{i};$
@@ -1342,8 +1360,6 @@
 
             \SetKwData{NumeroDeIteraciones}{NUMERO\_DE\_ITERACIONES}
             \SetKwData{ControladorDeAcceso}{controladorDeAcceso}
-            \SetKwData{ColaRapida}{COLA\_RAPIDA}
-            \SetKwData{ColaLenta}{COLA\_LENTA}
             \SetKwData{IdAficionado}{idAficionado}
             \SetKwData{CaminarABanos}{caminarABanos}
             \SetKwData{T}{T}
@@ -1357,21 +1373,26 @@
             \SetKwData{PedirPantalla}{pedirPantalla}
             \SetKwData{LiberarPantalla}{liberarPantalla}
 
+            \SetKwData{NumeroDeIteraciones}{NUMERO\_DE\_ITERACIONES}
+
             \SetKwFunction{Send}{send}
             \SetKwFunction{Receive}{receive}
             \SetKwFunction{Aficionado}{aficionado}
             \SetKwFunction{Random}{random}
 
             \KwData{\\
+                    $\NumeroDeIteraciones : Entero$\\
                     $\IdAficionado : Entero$\\
-                    $\CaminarABanos : Entero$
+                    $\CaminarABanos : Entero$\\
             }
 
-            \Fn{aficionado{$\IdAficionado : Entero$}}{
+            $\NumeroDeIteraciones \leftarrow 5$\;
+
+            \Fn{\Aficionado{$\IdAficionado : Entero$}}{
                 \For{$i \leftarrow 1$ \KwTo $\NumeroDeIteraciones$}{
                     \Sleep{\Random{1, \CaminarABanos}}\;
                     \Send{$\DeterminarTiempoEnCola, null$}\;
-                    \Receive{$\T$}\;
+                    \Receive{$BuzonAficionado, \T$}\;
                     \uIf{$\T \leq 5$}{
                         \Send{$\PedirColaRapida, \IdAficionado$}\;
                         \Receive{$\BuzonAficionado, null$}\;
@@ -1397,7 +1418,7 @@
 
         \newpage
         \begin{algorithm}[H]
-            \TitleOfAlgo{Clase ControladorColaDeAcceso}
+            \TitleOfAlgo{Clase ControladorDeAcceso}
             \DontPrintSemicolon
             \SetAlgoLined
 
@@ -1409,8 +1430,6 @@
             \SetKwData{PedirPantalla}{pedirPantalla}
             \SetKwData{LiberarPantalla}{liberarPantalla}
 
-            \SetKwData{ColaRapida}{COLA\_RAPIDA}
-            \SetKwData{ColaLenta}{COLA\_LENTA}
             \SetKwData{BuzonesAficionados}{buzonesAficionados}
 
             \SetKwData{LibreColaRapida}{libreColaRapida}
@@ -1456,8 +1475,6 @@
             \SetKwData{PedirPantalla}{pedirPantalla}
             \SetKwData{LiberarPantalla}{liberarPantalla}
 
-            \SetKwData{ColaRapida}{COLA\_RAPIDA}
-            \SetKwData{ColaLenta}{COLA\_LENTA}
             \SetKwData{BuzonesAficionados}{buzonesAficionados}
 
             \SetKwData{LibreColaRapida}{libreColaRapida}
@@ -1469,7 +1486,7 @@
             \SetKwFunction{Random}{random}
             \SetKwFunction{When}{when}
 
-            \Fn{controladorColaDeAcceso()}{
+            \Fn{iniciar()}{
                 \Funcion{while(true)}{
                     \Funcion{select}{
                         
@@ -1506,6 +1523,7 @@
                         or \hspace*{1em}\tcp{Selector para salir de pantalla}
                         \hspace*{1em}\Receive{$\LiberarPantalla$}\;
                         \hspace*{1em}$\LibrePantalla \leftarrow true$\;
+                        
                     }
                 }
             }
@@ -1515,11 +1533,16 @@
     \subsection{Cuestiones planteadas en los ejercicios}
         \begin{enumerate}[label=\alph*)]
             \item \textbf{(0.5 puntos sobre 10) ¿Se pueden usar simultáneamente los dos tornos? Justifica la
-            respuesta}
-            
-            \item \textbf{(0.5 puntos sobre 10) ¿Cómo has resuelto la exclusión mutua de la pantalla?}
-            
+            respuesta}\\
+            Si, ya que el controlador solo se encarga de dar acceso a uno de los dos si esta libre,
+            por lo que puede darle acceso a dos procesos uno con el rápido y otro con el lento, siempre que ambos 
+            estén libres. Por lo que uno puede estar usando el lento hacer un \textbf{sleep} y mientras estar otro
+            en el rápido haciendo lo mismo.
+            \item \textbf{(0.5 puntos sobre 10) ¿Cómo has resuelto la exclusión mutua de la pantalla?}\\
+            Con la asignación de esta por medio del conrolador y de una condición de guarda, evitando 
+            así que más de un proceso pueda acceder a ella a la vez.
         \end{enumerate}
+    \newpage
     \subsection{Código Java de los ejercicios comentado}
         \begin{lstlisting}[language=Java, title={Clase }]
 
