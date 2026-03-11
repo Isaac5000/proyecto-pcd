@@ -922,8 +922,9 @@
     variables de los tornos.
 
     El segundo monitor tiene un protocolo para el acceso y uso de las zonas, otro para el uso de la 
-    bicicleta premium y un último para la liberación de la zona tras su uso. Evitando que varios procesos
-    accedan a las zonas simultáneamente o que varios lean y escriban a la vez donde no deberían.
+    bicicleta premium, otro para dejar libre lacola de la bicicleta premium y un último para la 
+    liberación de la zona tras su uso. Evitando que varios procesos accedan a las zonas simultáneamente 
+    o que varios lean y escriban a la vez donde no deberían.
 
     Por último, el monitor de la pantalla se encarga de recibir lo que tiene que imprimir y usa esto
     en exclusión mutua, evitando que más de un proceso pueda acceder a la impresión por pantalla
@@ -988,6 +989,7 @@
             \SetKwData{IdCliente}{idCliente}
             \SetKwData{X}{X}
             \SetKwData{Y}{Y}
+            \SetKwData{UsarBicicletaPremium}{usarBicicletaPremium}
 
             \SetKwFunction{Cliente}{cliente}
             \SetKwFunction{SeleccionarYUsarTorno}{seleccionarYUsarTorno}
@@ -999,15 +1001,18 @@
             \SetKwFunction{UsarPantalla}{usarPantalla}
             \SetKwFunction{Random}{random}
             \SetKwFunction{Sleep}{sleep}
+            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
 
             \KwData{\\
                     $\X : Entero$\\
                     $\Y : Entero$\\
+                    $\UsarBicicletaPremium : Booleano$\\
             }
             \BlankLine
             \tcp{Inicializar variables del cliente}
             $\X \leftarrow \Random{1,\TiempoMaxEnTorno}$\;
             $\Y \leftarrow \Random{1,\TiempoMaxEnZona}$\;
+            $\UsarBicicletaPremium \leftarrow$ false\;
 
             \Fn{cliente($\IdCliente : Entero$)}{
                 $idTorno \leftarrow \MonitorTornos.\SeleccionarYUsarTorno{\X}$\;
@@ -1015,18 +1020,21 @@
                 $\MonitorTornos.\SalirDeTorno{\X, idTorno}$\;
                 $idZonaYTiempos \leftarrow \MonitorZonas.\AccederAZona{\Y}$\;
                 
-                usarBicicletaPremium $\leftarrow$ false\;
+                
                 \If{$idZonaYTiempos[0] = CARDIO$}{
-                    usarBicicletaPremium $\leftarrow$ \Random{1,10} $\leq$ 3\;
+                    $\UsarBicicletaPremium \leftarrow$ \Random{1,10} $\leq$ 3\;
                 }
                 
-                \tcp{Crear mensaje}
+                \tcp{Crear mensaje con parámetros obtenidos previamente}
                 $\MonitorPantalla.\UsarPantalla{mensaje}$\;
                 \If{usarBicicletaPremium} {
                     $\MonitorZonas.\EntrarEnBicicletaPremium{}$\;
                 } 
                 $\Sleep{\Y}$\;
-                $\MonitorZonas.\SalirDeZona{\Y, idZona, usarBicicletaPremium}$\;
+                \If{$\UsarBicicletaPremium$}{
+                    $\MonitorZonas.\SalirDeBicicletaPremium{}$\;
+                }
+                $\MonitorZonas.\SalirDeZona{\Y, idZonaYTiempos[0]}$\;
                 
             }
 
@@ -1106,6 +1114,7 @@
             \SetKwFunction{EntrarEnZona}{entrarEnZona}
             \SetKwFunction{SalirDeZona}{salirDeZona}
             \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
+            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
             \SetKwFunction{Delay}{delay}
             \SetKwFunction{Resume}{resume}
             \SetKwFunction{Random}{random}
@@ -1122,6 +1131,7 @@
             \tcp{Inicializar variables del monitor}
             $\NumeroDeZonas \leftarrow 4$\;
             $\MaquinasPorZona \leftarrow 5$\;
+            $\BicicletaPremiumLibre \leftarrow true$\;
             \For{$i \leftarrow 1$ \KwTo \NumeroDeZonas}{
                 $\MaquinasPorZonaLibres[i] \leftarrow \MaquinasPorZona$\;
                 $\TiemposEnZonas[i] \leftarrow 0$\;
@@ -1129,13 +1139,11 @@
             $\BicicletaPremiumLibre \leftarrow true$\;
             \tcp{Funciones del monitor}
             \Fn{\AccederAZona{$Y : Entero$} : Entero[]}{
-                \tcp{Buscar primera zona libre}
-                \tcp{Si no hay}
-                \tcp{Buscar primera zona con menor tiempo}
+                \tcp{Buscar zona}
                 \tcp{Guardo todos los tiempos}
-                \tcp{Sumo mi tiempo en zona zona elegida}
-                \tcp{Guardo idZona}
-                \If{$\MaquinasPorZonaLibres[idZona] < 1$ }{
+                \TiemposEnZonas[idZona] $\leftarrow$ \TiemposEnZonas[idZona] + Y\;
+                idZonaYTiempos[0] $\leftarrow$ idZona\;
+                \If{$\MaquinasPorZonaLibres[idZona] \leq 0$ }{
                     \Delay{\ColasDeZonas[idZona]}\;
                 }
 
@@ -1162,6 +1170,8 @@
             \SetKwFunction{AccederAZona}{accederAZona}
             \SetKwFunction{SalirDeZona}{salirDeZona}
             \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
+            \SetKwFunction{EntrarEnBicicletaPremium}{entrarEnBicicletaPremium}
+            \SetKwFunction{SalirDeBicicletaPremium}{salirDeBicicletaPremium}
             \SetKwFunction{Delay}{delay}
             \SetKwFunction{Resume}{resume}
 
@@ -1173,17 +1183,15 @@
                 $\BicicletaPremiumLibre \leftarrow False$\;
             }
 
+            \Fn{\SalirDeBicicletaPremium{}}{
+                $\BicicletaPremiumLibre \leftarrow True$\;
+                \Resume{\ColaBicicletaPremium}\;
+            }
+
             \BlankLine
-            \Fn{\SalirDeZona{$Y : Entero , idZona : Entero , bicicletaPremium : Booleano$}}{
+            \Fn{\SalirDeZona{$Y : Entero , idZona : Entero$}}{
                 $\MaquinasPorZonaLibres[idZona] \leftarrow \MaquinasPorZonaLibres[idZona] + 1$\;
                 $\TiemposEnZonas[idZona] \leftarrow \TiemposEnZonas[idZona] - Y$\;
-                \uIf{$bicicletaPremium = True$}{
-                    $\BicicletaPremiumLibre \leftarrow True$\;
-                    \Resume{\ColaBicicletaPremium}\;
-                }
-                \ElseIf{\ColasDeZonas[idZona] = CARDIO}{
-                    \Resume{\ColaBicicletaPremium}\;
-                }
                 \Resume{\ColasDeZonas[idZona]}\;
             }
 
@@ -1312,8 +1320,10 @@
             \SetKwData{ControladorDeAcceso}{controladorDeAcceso}
             \SetKwData{Aficionados}{aficionados}
             \SetKwData{BuzonesAficionados}{buzonesAficionados}
+            \SetKwData{ColaRapida}{COLA\_RAPIDA}
+            \SetKwData{ColaLenta}{COLA\_LENTA}
 
-            \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
+            \SetKwData{DeterminarColaConTiempo}{determinarColaConTiempo}
             \SetKwData{PedirColaRapida}{pedirColaRapida}
             \SetKwData{PedirColaLenta}{pedirColaLenta}
             \SetKwData{LiberarColaRapida}{liberarColaRapida}
@@ -1328,24 +1338,29 @@
                     $\ControladorDeAcceso : ControladorDeAcceso$\\
                     $\Aficionados : Aficionado[]$\\
                     $\BuzonesAficionados : Buzon[]$\\
-                    $\DeterminarTiempoEnCola : Buzon$\\
+                    $\DeterminarColaConTiempo : Buzon$\\
                     $\PedirColaRapida : Buzon$\\
                     $\PedirColaLenta : Buzon$\\
                     $\LiberarColaRapida : Buzon$\\
                     $\LiberarColaLenta : Buzon$\\
                     $\PedirPantalla : Buzon$\\
                     $\LiberarPantalla : Buzon$\\
+                    $\ColaRapida : Caracter$\\
+                    $\ColaLenta : Caracter$\\
             }
             \BlankLine
             \tcp{Inicialización de variables globales}
             $\NumeroDeAficionados \leftarrow 50$\;
+            $\ColaRapida \leftarrow \text{R}$\;
+            $\ColaLenta \leftarrow \text{L}$\;
 
             \Fn{main()}{
                 \Cobegin{}{
                     \ControladorDeAcceso.iniciar()\;
                     \For{$i \leftarrow 1$ \KwTo $\NumeroDeAficionados$}{
-                        \tcp{Inicialización de un hilo aficionado}
-                        $\Aficionados[i].\Aficionado{i};$
+                        \tcp{Inicialización de un hilo aficionado y}
+                        \tcp{ejecución.}
+                        $\Aficionados[i].\Aficionado{i, \BuzonesAficionados[i]}$;\;
                     }
                 }
             }
@@ -1363,9 +1378,12 @@
             \SetKwData{IdAficionado}{idAficionado}
             \SetKwData{CaminarABanos}{caminarABanos}
             \SetKwData{T}{T}
+            \SetKwData{ColaSeleccionada}{colaSeleccionada}
+            \SetKwData{ColaRapida}{COLA\_RAPIDA}
+            \SetKwData{ColaLenta}{COLA\_LENTA}
 
             \SetKwData{BuzonAficionado}{buzonAficionado}
-            \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
+            \SetKwData{DeterminarColaConTiempo}{determinarColaConTiempo}
             \SetKwData{PedirColaRapida}{pedirColaRapida}
             \SetKwData{PedirColaLenta}{pedirColaLenta}
             \SetKwData{LiberarColaRapida}{liberarColaRapida}
@@ -1384,26 +1402,31 @@
                     $\NumeroDeIteraciones : Entero$\\
                     $\IdAficionado : Entero$\\
                     $\CaminarABanos : Entero$\\
+                    $\T : Entero$\\
+                    $\BuzonAficionado : Buzon$\\
             }
 
             $\NumeroDeIteraciones \leftarrow 5$\;
 
-            \Fn{\Aficionado{$\IdAficionado : Entero$}}{
+            \Fn{\Aficionado{$\IdAficionado : Entero , \BuzonAficionado : Buzon$}}{
                 \For{$i \leftarrow 1$ \KwTo $\NumeroDeIteraciones$}{
                     \Sleep{\Random{1, \CaminarABanos}}\;
-                    \Send{$\DeterminarTiempoEnCola, null$}\;
-                    \Receive{$BuzonAficionado, \T$}\;
-                    \uIf{$\T \leq 5$}{
-                        \Send{$\PedirColaRapida, \IdAficionado$}\;
-                        \Receive{$\BuzonAficionado, null$}\;
-                        \Sleep{$\T$}\;
-                        \Send{$\LiberarColaRapida$}\;
-                    }
-                    \Else{
-                        \Send{$\PedirColaLenta, \IdAficionado$}\;
-                        \Receive{$\BuzonAficionado, null$}\;
-                        \Sleep{$\T$}\;
-                        \Send{$\LiberarColaLenta$}\;
+                    $\T \leftarrow \Random{1, 10}$\;
+                    \Send{$\DeterminarColaConTiempo, \{idAficionado, T\}$}\;
+                    \Receive{$BuzonAficionado, \ColaSeleccionada$}\;
+                    \Switch{\ColaSeleccionada}{
+                        \Case{\ColaRapida}{
+                            \Send{$\PedirColaRapida, \IdAficionado$}\;
+                            \Receive{$\BuzonAficionado, null$}\;
+                            \Sleep{$\T$}\;
+                            \Send{$\LiberarColaRapida$}\;
+                        }
+                        \Case{\ColaLenta}{
+                            \Send{$\PedirColaLenta, \IdAficionado$}\;
+                            \Receive{$\BuzonAficionado, null$}\;
+                            \Sleep{$\T$}\;
+                            \Send{$\LiberarColaLenta$}\;
+                        }
                     }
                     
                     \Send{$\PedirPantalla, \IdAficionado$}\;
@@ -1422,7 +1445,7 @@
             \DontPrintSemicolon
             \SetAlgoLined
 
-            \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
+            \SetKwData{DeterminarColaConTiempo}{determinarColaConTiempo}
             \SetKwData{PedirColaRapida}{pedirColaRapida}
             \SetKwData{PedirColaLenta}{pedirColaLenta}
             \SetKwData{LiberarColaRapida}{liberarColaRapida}
@@ -1442,14 +1465,6 @@
             \SetKwFunction{When}{when}
 
             \KwData{\\
-                    $\BuzonesAficionados : Buzon[]$\\
-                    $\DeterminarTiempoEnCola : Buzon$\\
-                    $\PedirColaRapida : Buzon$\\
-                    $\PedirColaLenta : Buzon$\\
-                    $\LiberarColaRapida : Buzon$\\
-                    $\LiberarColaLenta : Buzon$\\
-                    $\PedirPantalla : Buzon$\\
-                    $\LiberarPantalla : Buzon$\\
                     $\LibreColaRapida : Booleano$\\
                     $\LibreColaLenta : Booleano$\\
                     $\LibrePantalla : Booleano$\\
@@ -1465,15 +1480,17 @@
         \newpage
         \begin{algorithm}[H]
             \DontPrintSemicolon
-            \SetAlgoLined
+            \SetAlgoNoLine
             
-            \SetKwData{DeterminarTiempoEnCola}{determinarTiempoEnCola}
+            \SetKwData{DeterminarColaConTiempo}{determinarColaConTiempo}
             \SetKwData{PedirColaRapida}{pedirColaRapida}
             \SetKwData{PedirColaLenta}{pedirColaLenta}
             \SetKwData{LiberarColaRapida}{liberarColaRapida}
             \SetKwData{LiberarColaLenta}{liberarColaLenta}
             \SetKwData{PedirPantalla}{pedirPantalla}
             \SetKwData{LiberarPantalla}{liberarPantalla}
+            \SetKwData{ColaRapida}{COLA\_RAPIDA}
+            \SetKwData{ColaLenta}{COLA\_LENTA}
 
             \SetKwData{BuzonesAficionados}{buzonesAficionados}
 
@@ -1490,10 +1507,14 @@
                 \Funcion{while(true)}{
                     \Funcion{select}{
                         
-                        \hspace*{1em}\tcp{Selector para pedir tiempo de validación}
-                        \hspace*{1em}\Receive{$\DeterminarTiempoEnCola, idAficionado$}\;
-                        \hspace*{1em}$T \leftarrow \Random{1,10}$\;
-                        \hspace*{1em}$\Send{\BuzonesAficionados[idAficionado], T}$\;
+                        \hspace*{1em}\tcp{Selector para pedir una cola.}
+                        \hspace*{1em}\Receive{$\DeterminarColaConTiempo, \{idAficionado, T\}$}\;
+                        \hspace*{1em}\uIf{$T \leq 5$}{
+                            $\Send{\BuzonesAficionados[idAficionado], \ColaRapida}$\;
+                        }
+                        \hspace*{1em}\uElse{
+                            $\Send{\BuzonesAficionados[idAficionado], \ColaLenta}$\;
+                        }
 
                         or\hspace*{1em}\tcp{Selector de cola rápida con guarda}
                         \hspace*{1em}\When $\LibreColaRapida = true  =>$\;
@@ -1511,6 +1532,7 @@
                         \hspace*{1em}\When $\LibrePantalla = true  =>$\;
                         \hspace*{1em}\Receive{$\PedirPantalla, idAficionado$}\;
                         \hspace*{1em}$\LibrePantalla \leftarrow false$\;
+                        \hspace*{1em}$\Send{\BuzonesAficionados[idAficionado], null}$\;
 
                         or \hspace*{1em}\tcp{Selector para salir de cola rápida}
                         \hspace*{1em}\Receive{$\LiberarColaRapida$}\;
