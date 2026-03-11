@@ -1439,46 +1439,8 @@
 
         \end{algorithm}
 
-        \newpage
         \begin{algorithm}[H]
             \TitleOfAlgo{Clase ControladorDeAcceso}
-            \DontPrintSemicolon
-            \SetAlgoLined
-
-            \SetKwData{DeterminarColaConTiempo}{determinarColaConTiempo}
-            \SetKwData{PedirColaRapida}{pedirColaRapida}
-            \SetKwData{PedirColaLenta}{pedirColaLenta}
-            \SetKwData{LiberarColaRapida}{liberarColaRapida}
-            \SetKwData{LiberarColaLenta}{liberarColaLenta}
-            \SetKwData{PedirPantalla}{pedirPantalla}
-            \SetKwData{LiberarPantalla}{liberarPantalla}
-
-            \SetKwData{BuzonesAficionados}{buzonesAficionados}
-
-            \SetKwData{LibreColaRapida}{libreColaRapida}
-            \SetKwData{LibreColaLenta}{libreColaLenta}
-            \SetKwData{LibrePantalla}{librePantalla}
-
-            \SetKwFunction{Send}{send}
-            \SetKwFunction{Receive}{receive}
-            \SetKwFunction{Random}{random}
-            \SetKwFunction{When}{when}
-
-            \KwData{\\
-                    $\LibreColaRapida : Booleano$\\
-                    $\LibreColaLenta : Booleano$\\
-                    $\LibrePantalla : Booleano$\\
-            }
-            \BlankLine
-            \tcp{Inicializar booleanos de guardas}
-            $\LibreColaRapida \leftarrow true$\;
-            $\LibreColaLenta \leftarrow true$\;
-            $\LibrePantalla \leftarrow true$\;
-            \BlankLine
-        \end{algorithm}
-
-        \newpage
-        \begin{algorithm}[H]
             \DontPrintSemicolon
             \SetAlgoNoLine
             
@@ -1502,6 +1464,18 @@
             \SetKwFunction{Receive}{receive}
             \SetKwFunction{Random}{random}
             \SetKwFunction{When}{when}
+
+            \KwData{\\
+                    $\LibreColaRapida : Booleano$\\
+                    $\LibreColaLenta : Booleano$\\
+                    $\LibrePantalla : Booleano$\\
+            }
+            \BlankLine
+            \tcp{Inicializar booleanos de guardas}
+            $\LibreColaRapida \leftarrow true$\;
+            $\LibreColaLenta \leftarrow true$\;
+            $\LibrePantalla \leftarrow true$\;
+            \BlankLine
 
             \Fn{iniciar()}{
                 \Funcion{while(true)}{
