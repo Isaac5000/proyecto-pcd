@@ -1050,6 +1050,8 @@
             \SetKwData{TiempoEnTornos}{tiempoEnTornos}
             \SetKwData{TornosLibres}{tornosLibres}
             \SetKwData{ColasDeTornos}{colasDeTornos}
+            \SetKwData{X}{X}
+            \SetKwData{IdTornoSeleccionado}{idTornoSeleccionado}
 
             \SetKwFunction{SeleccionarYUsarTorno}{seleccionarYUsarTorno}
             \SetKwFunction{EntrarEnTorno}{entrarEnTorno}
@@ -1072,13 +1074,11 @@
             }
             \tcp{Funciones del monitor}
             \BlankLine
-            \Fn{\SeleccionarYUsarTorno{$idTorno : Entero$} : Entero}{
+            \Fn{\SeleccionarYUsarTorno{$\X : Entero$} : Entero}{
                 \tcp{Buscar torno libre}
-                \tcp{Si no hay}
-                \tcp{buscar torno con tiempo mínimo}
-                \tcp{Sumar mi tiempo en torno}
-                \If{$\TornosLibres[idTornoSeleccionado] = False$ }{
-                    \Delay{\ColasDeTornos[$idTornoSeleccionado$]}\;
+                \TiempoEnTornos[\IdTornoSeleccionado] $\leftarrow$ \TiempoEnTornos[\IdTornoSeleccionado] + X\;
+                \If{$\TornosLibres[\IdTornoSeleccionado] = False$ }{
+                    \Delay{\ColasDeTornos[\IdTornoSeleccionado]}\;
                 }
 
                 $\TornosLibres[idTornoSeleccionado] \leftarrow False$\;
@@ -1106,6 +1106,7 @@
             \SetKwData{MaquinasPorZonaLibres}{maquinasPorZonaLibres}
             \SetKwData{ColasDeZonas}{colasDeZonas}
             \SetKwData{TiemposEnZonas}{tiemposEnZonas}
+            \SetKwData{IdZonaYTiempos}{idZonaYTiempos}
 
             \SetKwData{BicicletaPremiumLibre}{bicicletaPremiumLibre}
             \SetKwData{ColaBicicletaPremium}{colaBicicletaPremium}
@@ -1140,9 +1141,10 @@
             \tcp{Funciones del monitor}
             \Fn{\AccederAZona{$Y : Entero$} : Entero[]}{
                 \tcp{Buscar zona}
+                \tcp{Guarda en idZona}
                 \tcp{Guardo todos los tiempos}
+                \IdZonaYTiempos[0] $\leftarrow$ idZona\;
                 \TiemposEnZonas[idZona] $\leftarrow$ \TiemposEnZonas[idZona] + Y\;
-                idZonaYTiempos[0] $\leftarrow$ idZona\;
                 \If{$\MaquinasPorZonaLibres[idZona] \leq 0$ }{
                     \Delay{\ColasDeZonas[idZona]}\;
                 }
@@ -1203,11 +1205,27 @@
             \TitleOfAlgo{Monitor Pantalla}
             \DontPrintSemicolon
             \SetAlgoLined
+            \SetKwData{ColaPantalla}{colaPantalla}
+            \SetKwData{PantallaLibre}{pantallaLibre}
 
+            \SetKwFunction{Delay}{delay}
+            \SetKwFunction{Resume}{resume}
             \SetKwFunction{UsarPantalla}{usarPantalla}
 
+            \KwData{\\
+                $\ColaPantalla : Condition$\\
+                $\PantallaLibre : Booleano$\\
+            }
+            \BlankLine
+            \PantallaLibre $\leftarrow$ true\;
+
+
             \Fn{\UsarPantalla{$mensaje : Cadena$}}{
+                \If{$\PantallaLibre = False$}{
+                    \Delay{\ColaPantalla}\;
+                }
                 \tcp{Imprimir mensaje en pantalla}
+                \Resume{\ColaPantalla}\;
             }
 
 
