@@ -273,7 +273,7 @@
     \newpage
     \subsection{Código Java de los ejercicios comentado}
         \begin{lstlisting}[language=Java, title={Clase Main}]
-            package ejercicio1;
+            package ejercicio1; //NOSONAR
 
             import java.util.Random;
             import java.util.concurrent.locks.ReentrantLock;
@@ -281,21 +281,23 @@
             public class Main {
                 public static final int NUM_OPERACIONES = 10;
                 public static final int LONGITUD_FILAS_Y_COLUMNAS = 3;
-                public static final int NUM_0_9 = 10;
+                public static final int VALOR_MAX_MATRIZ = 10;
+                public static final int VALOR_MIN_MATRIZ = 1;
+                public static final Random RANDOM = new Random();
 
                 /* Este cerrojo se encarga de bloquear la sección crítica de la pantalla para que no acceda
                 * más de un hilo a la vez */ 
-                public static ReentrantLock cerrojoPantalla = new ReentrantLock();
+                public static final ReentrantLock CERROJO_PANTALLA = new ReentrantLock();
                 
                 /**
-                * Función que le da valores aleatorios entre 0 y 9 a una matriz de 3x3,
+                * Función que le da valores aleatorios entre 1 y 9 a una matriz de 3x3,
                 * @param matriz Es la matriz que se rellenara con núevos valores aleatorios
                 */
                 public static void generarMatriz(int[][] matriz){
                     for(int i = 0; i < LONGITUD_FILAS_Y_COLUMNAS; i++) {
                         for(int j = 0; j < LONGITUD_FILAS_Y_COLUMNAS; j++) {
-                            Random random = new Random();
-                            matriz[i][j] = random.nextInt(NUM_0_9);
+                            matriz[i][j] = VALOR_MIN_MATRIZ +
+                                    RANDOM.nextInt(VALOR_MAX_MATRIZ);
                         }
                     }
                 }
@@ -304,7 +306,7 @@
                 /**
                 * Función principal del programa donde se ejecutan dos hilos, uno que se encarga de 
                 * hacer el cuadrado de una matriz y otro el doble de una matriz.
-                * @param args
+                * @param args no hay nada en esta variable.
                 */
                 public static void main(String[] args) {
                     CuadradoMatriz cuadrado = new CuadradoMatriz();
@@ -324,143 +326,195 @@
         \end{lstlisting}
         \newpage
         \begin{lstlisting}[language=Java, title={Clase SumaMatriz}]
-            package ejercicio1;
+            package ejercicio1; //NOSONAR
 
             public class SumaMatriz extends Thread{
-                
+
+                private final int[][] metricasDeEntrenamiento =
+                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+
+                /**
+                * Función para sumar la matriz consigo misma.
+                * @param matriz matriz que se va a sumar consigo misma
+                * @return matriz sumada consigo misma.
+                */
+                private int[][] calcularSumaMatriz(int[][] matriz) {
+                    int[][] suma = new int[matriz.length][matriz[0].length];
+                    for (int i = 0; i < matriz.length; i++) {
+                        for (int j = 0; j < matriz[0].length; j++) {
+                            suma[i][j] = matriz[i][j] + matriz[i][j];
+                        }
+                    }
+                    return suma;
+                }
+
+                /**
+                * Imprime en el formato correcto del ejercicio.
+                * @param matriz es la que se usa para hacer la suma.
+                * @param solucion es la solución del cálculo.
+                */
+                @SuppressWarnings("java:S106")
+                private void imprimirSumaDeMatriz(int[][] matriz, int[][] solucion) {
+                    System.out.println("A + A\n");
+
+                    for (int[] fila : matriz) {
+                        for (int valor : fila) {
+                            System.out.print(valor + "a ");
+                        }
+                        System.out.println();
+                    }
+                    System.out.println("\n+\n");
+
+                    for (int[] fila : matriz) {
+                        for (int valor : fila) {
+                            System.out.print(valor + "a ");
+                        }
+                        System.out.println();
+                    }
+
+                    System.out.println("\n2A\n");
+
+                    for (int[] fila : solucion) {
+                        for (int valor : fila) {
+                            System.out.print(valor + "r ");
+                        }
+                        System.out.println();
+                    }
+                    System.out.println();
+                }
                 
                 @Override
                 public void run() {
+
+                    int[][] impactoAcumulado;
                     
-                    int metricasDeEntrenamiento[][] = 
-                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                    int impactoAcumulado[][] = 
-                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                    
-                    for (int operacionesRealizadas = 0; 
-                        operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+                    for (int operacionesRealizadas = 0; operacionesRealizadas < Main.NUM_OPERACIONES;
+                        operacionesRealizadas++) {
                         
                         Main.generarMatriz(metricasDeEntrenamiento);
-                        
                         // Suma de la matriz A + A (2A)
-                        for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
-                            for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
-                                impactoAcumulado[i][j] = 
-                                    metricasDeEntrenamiento[i][j] + metricasDeEntrenamiento[i][j];
-                            }
-                        }
-                        
+                        impactoAcumulado = calcularSumaMatriz(metricasDeEntrenamiento);
                         
                         /* Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
                         * compartible no sea usado por más de un proceso a la vez
                         */
-                        Main.cerrojoPantalla.lock();
-                        
-                        System.out.println("A + A\n");
-                        
-                        for (int[] fila : metricasDeEntrenamiento) {
-                            for (int valor : fila) {
-                                System.out.print(valor + "a ");
-                            }
-                            System.out.println();
-                        }
-                        System.out.println("\n+\n");
+                        Main.CERROJO_PANTALLA.lock();
 
-                        for (int[] fila : metricasDeEntrenamiento) {
-                            for (int valor : fila) {
-                                System.out.print(valor + "a ");
-                            }
-                            System.out.println();
-                        }
-                        
-                        System.out.println("\n2A\n");
-                        
-                        for (int[] fila : impactoAcumulado) {
-                            for (int valor : fila) {
-                                System.out.print(valor + "r ");
-                            }
-                            System.out.println();
-                        }
-                        System.out.println();
-                        
-                        Main.cerrojoPantalla.unlock();
+                        imprimirSumaDeMatriz(metricasDeEntrenamiento, impactoAcumulado);
+
+                        Main.CERROJO_PANTALLA.unlock();
                         
                     }
                     
                 }
             }
 
+
         \end{lstlisting}
-        \newpage
+
         \begin{lstlisting}[language=Java, title={Clase CuadradoMatriz}]
-            package ejercicio1;
+            package ejercicio1; //NOSONAR
 
             public class CuadradoMatriz extends Thread {
+
+                private final int[][] metricasDeEntrenamiento =
+                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+
+                /**
+                * Función para calcular el cuadrado de una matriz.
+                * @param matriz es a la que se le va ha realizar el cuadrado.
+                * @return devuelve el cuadrado de la matriz.
+                */
+                private int[][] calcularCuadradoMatriz(int[][] matriz) {
+                    int[][] cuadrado = new int[matriz.length][matriz[0].length];
+                    for (int i = 0; i < matriz.length; i++) {
+                        for (int j = 0; j < matriz.length; j++) {
+                            cuadrado[i][j] = 0;
+                            for (int k = 0; k < matriz.length; k++) {
+                                cuadrado[i][j] += matriz[i][k] * matriz[k][j];
+                            }
+                        }
+                    }
+                    return cuadrado;
+                }
+
+                /**
+                * Imprime en el formato correcto del ejercicio.
+                * @param matriz es la que se usa para hacer el cuadrado.
+                * @param solucion es la solución del cálculo.
+                */
+                @SuppressWarnings("java:S106")
+                private void imprimirCuadradoDeMatriz(int[][] matriz, int[][] solucion ) {
+                    System.out.println("A x A\n");
+
+                    for (int[] fila : matriz) {
+                        for (int valor : fila) {
+                            System.out.print(valor + "a ");
+                        }
+                        System.out.println();
+                    }
+                    System.out.println("\nx\n");
+
+                    for (int[] fila : matriz) {
+                        for (int valor : fila) {
+                            System.out.print(valor + "a ");
+                        }
+                        System.out.println();
+                    }
+
+                    System.out.println("\nA2\n");
+
+                    for (int[] fila : solucion) {
+                        for (int valor : fila) {
+                            System.out.print(valor + "r ");
+                        }
+                        System.out.println();
+                    }
+                    System.out.println();
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+
 
                 @Override
                 public void run() {
 
-                    int metricasDeEntrenamiento[][] = 
-                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
-                    int impactoAcumulado[][] = 
-                        new int[Main.LONGITUD_FILAS_Y_COLUMNAS][Main.LONGITUD_FILAS_Y_COLUMNAS];
+                    int[][] impactoAcumulado;
 
-                    for (int operacionesRealizadas = 0; 
-                        operacionesRealizadas < Main.NUM_OPERACIONES; operacionesRealizadas++) {
+                    for (int operacionesRealizadas = 0; operacionesRealizadas < Main.NUM_OPERACIONES; 
+                        operacionesRealizadas++) {
 
                         Main.generarMatriz(metricasDeEntrenamiento);
-
-                        // Cálculo del cuadrado de la matriz
-                        for (int i = 0; i < Main.LONGITUD_FILAS_Y_COLUMNAS; i++) {
-                            for (int j = 0; j < Main.LONGITUD_FILAS_Y_COLUMNAS; j++) {
-                                impactoAcumulado[i][j] = 0;
-                                for (int k = 0; k < Main.LONGITUD_FILAS_Y_COLUMNAS; k++) {
-                                    impactoAcumulado[i][j] += 
-                                        metricasDeEntrenamiento[i][k] * metricasDeEntrenamiento[k][j];
-                                }
-                            }
-                        }
-
+                        impactoAcumulado = calcularCuadradoMatriz(metricasDeEntrenamiento);
 
                         /*
                         * Aquí se bloquea el cerrojo de la pantalla para asegurar que este recurso no
-                        * compartible no sea usado por más de un proceso a la vez
+                        * compartible no sea usado por más de un proceso a la vez.
                         */
-                        Main.cerrojoPantalla.lock();
+                        Main.CERROJO_PANTALLA.lock();
                         
-                        System.out.println("A x A\n");
-                        
-                        for (int[] fila : metricasDeEntrenamiento) {
-                            for (int valor : fila) {
-                                System.out.print(valor + "a ");
-                            }
-                            System.out.println();
-                        }
-                        System.out.println("\nx\n");
+                        imprimirCuadradoDeMatriz(metricasDeEntrenamiento, impactoAcumulado);
 
-                        for (int[] fila : metricasDeEntrenamiento) {
-                            for (int valor : fila) {
-                                System.out.print(valor + "a ");
-                            }
-                            System.out.println();
-                        }
-                        
-                        System.out.println("\nA2\n");
-                        
-                        for (int[] fila : impactoAcumulado) {
-                            for (int valor : fila) {
-                                System.out.print(valor + "r ");
-                            }
-                            System.out.println();
-                        }
-                        System.out.println();
-
-                        Main.cerrojoPantalla.unlock();
+                        Main.CERROJO_PANTALLA.unlock();
 
                     }
 
                 }
             }
+
 
         \end{lstlisting}
 
@@ -657,7 +711,7 @@
         \newpage
     \subsection{Código Java de los ejercicios comentado}
         \begin{lstlisting}[language=Java, title={Clase Main}]
-            package ejercicio2;
+            package ejercicio2; //NOSONAR
 
             import java.util.Random;
             import java.util.concurrent.Semaphore;
@@ -670,46 +724,54 @@
                 public static final int NUMERO_DE_SECUENCIAS = 3;
                 public static final int NUMERO_DE_EJERCICIOS = 5;
                 public static final int INICIALIZAR_SEMAFORO_BINARIO = 1;
-                public static final int NUM_0_9 = 10;
-                
-                public static Panel[] paneles = new Panel[NUMERO_DE_PANELES];
-                public static boolean[] panelesLibres = new boolean[NUMERO_DE_PANELES];
-                public static Semaphore mutexVariablesCompartidas = 
+                public static final int VALOR_MAX_MATRIZ = 9;
+                public static final int VALOR_MIN_MATRIZ = 1;
+                public static final Random RANDOM = new Random();
+
+                public static final int NORMALIZAR_NUMERO_DE_PANEL = 1;
+                public static final int NORMALIZAR_POSICION_X_DE_PANEL = 415;
+                public static final int NORMALIZAR_POSICION_Y_DE_PANEL = 0;
+
+                protected static final Panel[] PANELES = new Panel[NUMERO_DE_PANELES];
+                protected static final boolean[] PANELES_LIBRES = new boolean[NUMERO_DE_PANELES];
+                public static final Semaphore MUTEX_VARIABLES_COMPARTIDAS = 
                     new Semaphore(INICIALIZAR_SEMAFORO_BINARIO);
-                public static Semaphore semaforoDePaneles = new Semaphore(NUMERO_DE_PANELES);
+                public static final Semaphore SEMAFORO_DE_PANELES = new Semaphore(NUMERO_DE_PANELES);
                 
-                public static Equipo[] equipos = new Equipo[NUMERO_DE_EQUIPOS];
+                protected static final Equipo[] EQUIPOS = new Equipo[NUMERO_DE_EQUIPOS];
                 
                 /**
-                * Función que le da valores aleatorios entre 0 y 9 a una matriz de 5x5,
+                * Función que le da valores aleatorios entre 1 y 10 a una matriz de 5x5,
                 * @param matriz Es la matriz que se rellenara con núevos valores aleatorios
                 */
                 public static void generarMatriz(int[][] matriz){
                     for(int i = 0; i < NUMERO_DE_EJERCICIOS; i++) {
                         for(int j = 0; j < NUMERO_DE_EJERCICIOS; j++) {
-                            Random random = new Random();
-                            matriz[i][j] = random.nextInt(NUM_0_9);
+
+                            matriz[i][j] = RANDOM.nextInt(VALOR_MAX_MATRIZ) + VALOR_MIN_MATRIZ;
                         }
                     }
                 }
-                
+
                 public static void main(String[] args) {
-                    //Bucle para generar los paneles uno al lado del otro sin superponerse e 
-                    //inicializo el array de booleanos
+                    // Bucle para generar los paneles uno al lado del otro sin superponerse e 
+                    // inicializo el array de booleanos
                     for (int numPanel = 0; numPanel < NUMERO_DE_PANELES; numPanel++) {
-                        paneles[numPanel] = new Panel(new String("Panel " + (numPanel + 1)), 
-                            (numPanel * 410), 0);
-                        panelesLibres[numPanel] = true;
+                        PANELES[numPanel] = new Panel("Panel " + (numPanel + NORMALIZAR_NUMERO_DE_PANEL),
+                                (numPanel * NORMALIZAR_POSICION_X_DE_PANEL), 
+                                NORMALIZAR_POSICION_Y_DE_PANEL);
+                        PANELES_LIBRES[numPanel] = true;
                     }
                     
                     for(int numEquipo = 0; numEquipo < NUMERO_DE_EQUIPOS; numEquipo++) {
-                        equipos[numEquipo] = new Equipo(numEquipo);
-                        equipos[numEquipo].start();
+                        EQUIPOS[numEquipo] = new Equipo(numEquipo);
+                        EQUIPOS[numEquipo].start();
                     }
-                    
+
+
                     for(int numEquipo = 0; numEquipo < NUMERO_DE_EQUIPOS; numEquipo++) {
                         try {
-                            equipos[numEquipo].join();
+                            EQUIPOS[numEquipo].join();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -717,40 +779,55 @@
                 }
 
             }
+
         \end{lstlisting}
         
         \newpage
         \begin{lstlisting}[language=Java, title={Clase Equipo}]
-            package ejercicio2;
+            package ejercicio2; //NOSONAR
 
             import java.util.Arrays;
-
+            
+            @SuppressWarnings("java:S2696")
             public class Equipo extends Thread{
                     
-                    public static final int SPRINT = 0;
-                    public static final int PRIMER_EJERCICIO_MAX = 1;
+                    public static final int POSICION_DE_SPRINT = 0;
+                    public static final int PRIMER_EJERCICIO_SACAR_MAX = 1;
                     
-                    private int idEquipo;
+                    private final int idEquipo;
+
+                    // Estructura con las 4 matrices
+                    private final int[][][] tablaDeMatricesDeEjercicios = 
+                        new int[Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO]
+                        [Main.NUMERO_DE_EJERCICIOS][Main.NUMERO_DE_EJERCICIOS];
+                    // Matriz con las mejores marcas en cada deporte de cada deportista
+                    private final int[][] matrizResumenR = new int[Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO]
+                            [Main.NUMERO_DE_EJERCICIOS];
                     
                     public Equipo(int idEquipo) {
                         this.idEquipo = idEquipo;
-                        }
+                    }
                     
                     /**
                     * Función para extraer las mejores marcas de una matriz de ejercicios
-                    * @param ejercicios
-                    * @return
+                    * @param ejercicios matriz cuyas filas representan un ejercicio y contienen sus marcas.
+                    * @return devuelve un vector con las mejores marcas en cada ejercicio en orden
                     */
-                    private int[] mejoresMarcas(int[][] ejercicios) {
+                    private static int[] mejoresMarcas(int[][] ejercicios) {
                         int[] vectorDeMarcas = new int[Main.NUMERO_DE_EJERCICIOS];
-                        //Guardo sprint con el valor mínimo ya que es una pruba de velocidad
-                        vectorDeMarcas[SPRINT] = Arrays.stream(ejercicios[SPRINT]).min().getAsInt();
-                        //El resto de valores los guardo con el máximo salto, lanzamiento, resistencia, y 
-                        //agilidad.
-                        for(int numEjercicios = PRIMER_EJERCICIO_MAX; 
-                                numEjercicios < Main.NUMERO_DE_EJERCICIOS; numEjercicios++) {
-                            vectorDeMarcas[numEjercicios] = Arrays.stream(ejercicios[numEjercicios])
-                            .max().getAsInt();
+                        //Guardo sprint con el valor mínimo, ya que es una prueba de velocidad.
+                        if(Arrays.stream(ejercicios[POSICION_DE_SPRINT]).min().isPresent()) {
+                            vectorDeMarcas[POSICION_DE_SPRINT] =
+                                    Arrays.stream(ejercicios[POSICION_DE_SPRINT]).min().getAsInt();
+                        }
+                        // El resto de valores los guardo con el máximo salto, lanzamiento, 
+                        // resistencia, y agilidad.
+                        for(int numEjercicios = PRIMER_EJERCICIO_SACAR_MAX; 
+                            numEjercicios < Main.NUMERO_DE_EJERCICIOS; numEjercicios++) {
+                            if(Arrays.stream(ejercicios[numEjercicios]).max().isPresent()) {
+                                vectorDeMarcas[numEjercicios] =
+                                        Arrays.stream(ejercicios[numEjercicios]).max().getAsInt();
+                            }
                         }
                         
                         return vectorDeMarcas;
@@ -758,97 +835,103 @@
                     
                     /**
                     * Función que recibe una matriz de 4x5 y devuelve un string con el formato necesario 
-                    * para imprimir
+                    * para imprimir.
                     * @param matriz matriz que va a ser transformada en string (4 filas x 5 columnas)
                     * @return matriz transformada en string con el formato que necesito
                     */
                     private static String matrizToString(int[][] matriz) {
-                        String strMatriz = "";
+                        StringBuilder strMatriz = new StringBuilder();
                         for (int i = 0; i < Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO; i++) {
                             for (int j = 0; j < Main.NUMERO_DE_EJERCICIOS; j++) {
-                                strMatriz += matriz[i][j] + " ";
+                                strMatriz.append(matriz[i][j]).append(" ");
                             }
-                            strMatriz += "\n";
+                            strMatriz.append("\n");
                         }
-                        return strMatriz;
+                        return strMatriz.toString();
                     }
                     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     
                     @Override
                     public void run() {
                         
-                        //Estructura con las 4 matrices
-                        int[][][] tablaDeMatricesDeEjercicios = 
-                            new int[Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO]
-                            [Main.NUMERO_DE_EJERCICIOS][Main.NUMERO_DE_EJERCICIOS]; 
-                        
-                        //Matriz con las mejores marcas en cada deporte de cada deportista
-                        int[][] matrizResumenR = new int[Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO]
-                                [Main.NUMERO_DE_EJERCICIOS];
-                        
-                        
                         for(int secuenciasPorEquipo = 0; secuenciasPorEquipo < Main.NUMERO_DE_SECUENCIAS;
                                 secuenciasPorEquipo++) {
-                            //Primero se genera una matriz por jugador
+
+                            // Primero se genera una matriz por jugador
                             for(int numJugadores = 0; numJugadores < Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO; 
                                     numJugadores++) {
                                 Main.generarMatriz(tablaDeMatricesDeEjercicios[numJugadores]);
                             }
                             
-                            //Se seleccionan y guardan las mejores marcas de cada jugador
-                            //sprint, salto, lanzamiento, resistencia, y agilidad
+                            // Se seleccionan y guardan las mejores marcas de cada jugador
+                            // sprint, salto, lanzamiento, resistencia, y agilidad
                             for(int numJugadores = 0; numJugadores < Main.NUMERO_DE_DEPORTISTAS_POR_EQUIPO; 
                                     numJugadores++) {
                                 matrizResumenR[numJugadores] = 
                                     mejoresMarcas(tablaDeMatricesDeEjercicios[numJugadores]);
                             }
                             
-                            //Bloqueo el acceso a los paneles para que solo puedan estar el mismo número de 
-                            //procesos que paneles hay.
+                            // Bloqueo el acceso a los paneles para que solo puedan estar el mismo 
+                            // número de procesos que paneles hay.
                             try {
-                                Main.semaforoDePaneles.acquire();
+                                Main.SEMAFORO_DE_PANELES.acquire();
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            //Bloqueo el acceso a la varible que puede ser usada por más de un proceso a la 
-                            //vez para lectura y escritura, por un semáforo binario. 
+                            // Bloqueo el acceso a la varible que puede ser usada por más de un proceso a la 
+                            // vez para lectura y escritura, por un semáforo binario. 
                             try {
-                                Main.mutexVariablesCompartidas.acquire();
+                                Main.MUTEX_VARIABLES_COMPARTIDAS.acquire();
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            //Llegado este punto hay un panel libre asegurado por lo que uso un while para 
-                            //encontrar uno.
+
+                            // Llegado este punto hay un panel libre asegurado por lo que uso un while para 
+                            // encontrar uno.
                             int idPanel = 0;
-                            while(Main.panelesLibres[idPanel] != true) {
+                            while(!Main.PANELES_LIBRES[idPanel]) {
                                 idPanel++;
                             }
-                            Main.panelesLibres[idPanel] = false;
+                            Main.PANELES_LIBRES[idPanel] = false;
                             // Dejo libre el semáforo binario
-                            Main.mutexVariablesCompartidas.release();
+                            Main.MUTEX_VARIABLES_COMPARTIDAS.release();
                             
-                            String mensajeParaPanel = new String(
-                                    "Usando panel " + idPanel + " el hilo (equipo) " + idPanel + "\n\n"
-                                    + "Matriz R (Resumen del equipo " + idEquipo + ": mejores marcas=\n" 
-                                    + matrizToString(matrizResumenR) + "\n"  
+                            String mensajeParaPanel = ("Usando panel " + idPanel + " el hilo (equipo) " 
+                                    + idPanel + "\n\n" + "Matriz R (Resumen del equipo " + idEquipo 
+                                    + ": mejores marcas) =\n" + matrizToString(matrizResumenR) + "\n"
                                     + "Terminando de usar panel " + idPanel + " el hilo (equipo) " 
                                     + idEquipo + "\n");
                             
-                            Main.paneles[idPanel].escribir_mensaje(mensajeParaPanel);
+                            Main.PANELES[idPanel].escribir_mensaje(mensajeParaPanel);
                             
                             try {
-                                Main.mutexVariablesCompartidas.acquire();
+                                Main.MUTEX_VARIABLES_COMPARTIDAS.acquire();
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            Main.panelesLibres[idPanel] = true;
-                            Main.mutexVariablesCompartidas.release();
-                            Main.semaforoDePaneles.release();
+                            Main.PANELES_LIBRES[idPanel] = true;
+                            Main.MUTEX_VARIABLES_COMPARTIDAS.release();
+                            Main.SEMAFORO_DE_PANELES.release();
                         }
                     }
 
             }
-
         \end{lstlisting}
     \newpage
 \section{Ejercicio 3: Monitores}
@@ -938,7 +1021,7 @@
 
             \SetKwData{Clientes}{clientes}
             \SetKwData{MonitorTornos}{monitorTornos}
-            \SetKwData{MonitorZonas}{monitorZonas}
+            \SetKwData{MonitorZonasGimnasio}{monitorZonasGimnasio}
             \SetKwData{MonitorPantalla}{monitorPantalla}
             \SetKwData{TiempoMaxEnTorno}{TIEMPO\_MAX\_DE\_X\_TORNO}
             \SetKwData{TiempoMaxEnZona}{TIEMPO\_MAX\_DE\_Y\_ZONA}
@@ -950,7 +1033,7 @@
             \KwData{\\
                     $\Clientes : Cliente[]$\\
                     $\MonitorTornos : MonitorTornos$\\
-                    $\MonitorZonas : MonitorZonas$\\
+                    $\MonitorZonasGimnasio : MonitorZonasGimnasio$\\
                     $\MonitorPantalla : MonitorPantalla$\\
                     $\TiempoMaxEnTorno : Entero$\\
                     $\TiempoMaxEnZona : Entero$\\
@@ -981,7 +1064,7 @@
             \SetAlgoLined
 
             \SetKwData{MonitorTornos}{monitorTornos}
-            \SetKwData{MonitorZonas}{monitorZonas}
+            \SetKwData{MonitorZonasGimnasio}{monitorZonasGimnasio}
             \SetKwData{MonitorPantalla}{monitorPantalla}
 
             \SetKwData{TiempoMaxEnTorno}{TIEMPO\_MAX\_DE\_X\_TORNO}
@@ -1018,7 +1101,7 @@
                 $idTorno \leftarrow \MonitorTornos.\SeleccionarYUsarTorno{\X}$\;
                 $\Sleep{\X}$\;
                 $\MonitorTornos.\SalirDeTorno{\X, idTorno}$\;
-                $idZonaYTiempos \leftarrow \MonitorZonas.\AccederAZona{\Y}$\;
+                $idZonaYTiempos \leftarrow \MonitorZonasGimnasio.\AccederAZona{\Y}$\;
                 
                 
                 \If{$idZonaYTiempos[0] = CARDIO$}{
@@ -1028,13 +1111,13 @@
                 \tcp{Crear mensaje con parámetros obtenidos previamente}
                 $\MonitorPantalla.\UsarPantalla{mensaje}$\;
                 \If{usarBicicletaPremium} {
-                    $\MonitorZonas.\EntrarEnBicicletaPremium{}$\;
+                    $\MonitorZonasGimnasio.\EntrarEnBicicletaPremium{}$\;
                 } 
                 $\Sleep{\Y}$\;
                 \If{$\UsarBicicletaPremium$}{
-                    $\MonitorZonas.\SalirDeBicicletaPremium{}$\;
+                    $\MonitorZonasGimnasio.\SalirDeBicicletaPremium{}$\;
                 }
-                $\MonitorZonas.\SalirDeZona{\Y, idZonaYTiempos[0]}$\;
+                $\MonitorZonasGimnasio.\SalirDeZona{\Y, idZonaYTiempos[0]}$\;
                 
             }
 
@@ -1042,7 +1125,7 @@
 
         \newpage
         \begin{algorithm}
-            \TitleOfAlgo{Monitor Tornos}
+            \TitleOfAlgo{MonitorTornos}
             \DontPrintSemicolon
             \SetAlgoLined
 
@@ -1075,7 +1158,7 @@
             \tcp{Funciones del monitor}
             \BlankLine
             \Fn{\SeleccionarYUsarTorno{$\X : Entero$} : Entero}{
-                \tcp{Buscar torno libre}
+                \tcp{Buscar torno}
                 \TiempoEnTornos[\IdTornoSeleccionado] $\leftarrow$ \TiempoEnTornos[\IdTornoSeleccionado] + X\;
                 \If{$\TornosLibres[\IdTornoSeleccionado] = False$ }{
                     \Delay{\ColasDeTornos[\IdTornoSeleccionado]}\;
@@ -1097,7 +1180,7 @@
 
         \newpage
         \begin{algorithm}[H]
-            \TitleOfAlgo{Monitor ZonasGimnasio}
+            \TitleOfAlgo{MonitorZonasGimnasio}
             \DontPrintSemicolon
             \SetAlgoLined
 
@@ -1202,7 +1285,7 @@
 
         \newpage
         \begin{algorithm}[H]
-            \TitleOfAlgo{Monitor Pantalla}
+            \TitleOfAlgo{MonitorPantalla}
             \DontPrintSemicolon
             \SetAlgoLined
             \SetKwData{ColaPantalla}{colaPantalla}
@@ -1213,8 +1296,8 @@
             \SetKwFunction{UsarPantalla}{usarPantalla}
 
             \KwData{\\
-                $\ColaPantalla : Condition$\\
-                $\PantallaLibre : Booleano$\\
+                $Private\hspace{0.5em}\ColaPantalla : Condition$\\
+                $Private\hspace{0.5em}\PantallaLibre : Booleano$\\
             }
             \BlankLine
             \PantallaLibre $\leftarrow$ true\;
@@ -1224,7 +1307,9 @@
                 \If{$\PantallaLibre = False$}{
                     \Delay{\ColaPantalla}\;
                 }
+                $\PantallaLibre \leftarrow False$\;
                 \tcp{Imprimir mensaje en pantalla}
+                $\PantallaLibre \leftarrow True$\;
                 \Resume{\ColaPantalla}\;
             }
 
