@@ -1342,8 +1342,385 @@
         \end{enumerate}
     \newpage
     \subsection{Código Java de los ejercicios comentado}
-        \begin{lstlisting}[language=Java, title={Clase}]
+        \begin{lstlisting}[language=Java, title={Main}]
+            package ejercicio3; //NOSONAR
 
+            public class Main {
+                
+                public static final int NUMERO_DE_CLIENTES = 50;
+                public static final int TIEMPO_MAX_DE_X_TORNO = 5;
+                public static final int TIEMPO_MAX_DE_Y_ZONA = 5;
+                public static final int TIEMPO_MIN = 1;
+                
+                protected static final Cliente[] CLIENTES = new Cliente[NUMERO_DE_CLIENTES];
+                public static final MonitorTornos MONITOR_TORNOS = new MonitorTornos();
+                public static final MonitorZonasGimnasio MONITOR_ZONAS_GIMNASIO = 
+                    new MonitorZonasGimnasio();
+                public static final MonitorPantalla MONITOR_PANTALLA = new MonitorPantalla();
+                
+                public static void main(String[] args) {
+                    for(int i = 0; i < NUMERO_DE_CLIENTES; i++) {
+                        CLIENTES[i] = new Cliente(i);
+                        CLIENTES[i].start();
+                    }
+                    for(Cliente cliente : CLIENTES) {
+                        try {
+                            cliente.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    
+                }
+                
+            }
+        \end{lstlisting}
+
+        \newpage
+        \begin{lstlisting}[language=Java, title={Cliente}]
+            package ejercicio3; //NOSONAR
+
+            import java.util.Random;
+
+            public class Cliente extends Thread {
+                
+                private final int idCliente;
+                private static final Random RANDOM = new Random();
+                private int X = RANDOM.nextInt(Main.TIEMPO_MAX_DE_X_TORNO) + Main.TIEMPO_MIN;
+                private int Y = RANDOM.nextInt(Main.TIEMPO_MAX_DE_Y_ZONA) + Main.TIEMPO_MIN;
+                private boolean usarBicicletaPremium = false;
+
+                public static final int POSICION_DE_ID_DE_ZONA = 0;
+                public static final int POSICION_DE_CARDIO_EN_MONITOR = 0;
+                public static final int CIEN_POR_CIENTO = 10;
+                public static final int TREINTA_POR_CIENTO = 3;
+                public static final int CARDIO = 1;
+                public static final int FUERZA = 2;
+                public static final int FUNCIONAL = 3;
+                public static final int ESTIRAMIENTOS = 4;
+
+
+                public Cliente(int idCliente) {
+                    this.idCliente = idCliente;
+                }
+                
+                @Override
+                public void run() {
+                    int idTorno = Main.MONITOR_TORNOS.seleccionarYUsarTorno(X);
+                    try {
+                        Thread.sleep(X);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Main.MONITOR_TORNOS.salirDeTorno(X, idTorno);
+                    int[] idZonaYTiempos = Main.MONITOR_ZONAS_GIMNASIO.accederAZonaYRecuperarTiempos(Y);
+                    int idZona = idZonaYTiempos[POSICION_DE_ID_DE_ZONA];
+
+                    // {0,1,2} es true, {3 ,4 ,5 ,6 ,7 ,8 , 9} es false
+                    if(idZona == POSICION_DE_CARDIO_EN_MONITOR) {
+                        usarBicicletaPremium = (RANDOM.nextInt(CIEN_POR_CIENTO) < TREINTA_POR_CIENTO);
+                    }
+
+                    String mensaje =
+                            "--------------------------------------------------------------\n"
+                            + "Cliente " + this.idCliente + " ha pasado por el torno: " + idTorno
+                            + "\n"
+                            + "Tiempo en el torno (acceso): " + this.X + "\n"
+                            + "Zona elegida: " + idZona + "\n"
+                            + "Tiempo de entrenamiento: " + this.Y + "\n"
+                            + "Estimación de espera (sin incluirse a sí mismo):\n"
+                            + "  Zona1(Cardio)=" + idZonaYTiempos[CARDIO]
+                            + ",     Zona2(Fuerza)=" + idZonaYTiempos[FUERZA]
+                            + ",     Zona3(Funcional)=" + idZonaYTiempos[FUNCIONAL] + "\n"
+                            + "Zona4(Estiramientos)=" + idZonaYTiempos[ESTIRAMIENTOS] + "\n"
+                            + "Espera bicicleta premium (si aplica)="
+                            + (usarBicicletaPremium ? "Sí" : "No") + "\n"
+                            + "--------------------------------------------------------------\n";
+                    Main.MONITOR_PANTALLA.usarPantalla(mensaje);
+                    try {
+                        Thread.sleep(Y);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if(usarBicicletaPremium) {
+                        Main.MONITOR_ZONAS_GIMNASIO.salirDeBicicletaPremium();
+                    }
+                    Main.MONITOR_ZONAS_GIMNASIO.salirDeZona(Y, idZona);
+                }
+            }
+
+        \end{lstlisting}
+
+        \newpage
+        \begin{lstlisting}[language=Java, title={MonitorTornos}]
+            package ejercicio3; //NOSONAR
+
+            import java.util.concurrent.locks.Condition;
+            import java.util.concurrent.locks.ReentrantLock;
+
+            public class MonitorTornos {
+                private static final int NUMERO_DE_TORNOS = 3;
+                private final int[] tiemposEnTornos = new int[NUMERO_DE_TORNOS];
+                private final boolean[] tornosLibres = new boolean[NUMERO_DE_TORNOS];
+                private final ReentrantLock l = new ReentrantLock();
+                private final Condition[] colasDeTornos = new Condition[NUMERO_DE_TORNOS];
+                
+                private static final int POSICION_POR_DEFECTO = 0;
+
+                public MonitorTornos() {
+                    for(int i = 0; i < NUMERO_DE_TORNOS; i++) {
+                        tiemposEnTornos[i] = 0;
+                        tornosLibres[i] = true;
+                        colasDeTornos[i] = l.newCondition();
+                    }
+                }
+                
+                /**
+                * Función que se encarga de seleccionar un torno libre y en caso de no haber uno libre
+                * selecciona el primero con un mejor tiempo.
+                * @return Devuelve el ID del torno elegido.
+                */
+                private int buscarTorno() {
+                    int idTornoSeleccionado = POSICION_POR_DEFECTO;
+                    for(int idTornoActual = 0; idTornoActual < NUMERO_DE_TORNOS; idTornoActual++) {
+                        if(tornosLibres[idTornoActual]) {
+                            return idTornoActual;
+                        }
+                        if(tiemposEnTornos[idTornoSeleccionado] > tiemposEnTornos[idTornoActual]) {
+                            idTornoSeleccionado = idTornoActual;
+                        }
+                    }
+                    return idTornoSeleccionado;
+                }
+
+                /**
+                * Función que se encarga de seleccionar un torno para poder usarlo nada más salir de esta.
+                * @param X es el tiempo que va a pasar en el torno quien lo pide
+                * @return devuelve el ID del torno que se selecciona para usarlo
+                */
+                public int seleccionarYUsarTorno(int X) {
+                    l.lock();
+                    try {
+                        int idTornoSeleccionado = buscarTorno();
+                        tiemposEnTornos[idTornoSeleccionado] += X;
+                        while(!tornosLibres[idTornoSeleccionado]) {
+                            try {
+                                colasDeTornos[idTornoSeleccionado].await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        tornosLibres[idTornoSeleccionado] = false;
+                        return idTornoSeleccionado;
+                    } finally {
+                        l.unlock();
+                    }
+                }
+
+                /**
+                * Función para liberar el torno que se ha usado.
+                * @param X tiempo para restárselo al tiempo en la cola del torno.
+                * @param idTorno se usa para saber que torno se va a liberar.
+                */
+                public void salirDeTorno(int X, int idTorno) {
+                    l.lock();
+                    try {
+                        tornosLibres[idTorno] = true;
+                        tiemposEnTornos[idTorno] -= X;
+                        colasDeTornos[idTorno].signal();
+                    } finally {
+                        l.unlock();
+                    }
+                }
+                
+            }
+
+        \end{lstlisting}
+
+        \begin{lstlisting}[language=Java, title={MonitorZonasGimnasio}]
+            package ejercicio3; //NOSONAR
+
+            import java.util.ArrayList;
+            import java.util.Random;
+            import java.util.concurrent.locks.Condition;
+            import java.util.concurrent.locks.ReentrantLock;
+
+            public class MonitorZonasGimnasio {
+                private static final int NUMERO_DE_ZONAS = 4;
+                private static final int MAQUINAS_POR_ZONA = 5;
+
+                private final int[] maquinasPorZonaLibres = new int[NUMERO_DE_ZONAS];
+                private final Condition[] colasDeZonas = new Condition[NUMERO_DE_ZONAS];
+                private final int[] tiemposEnZonas = new int[NUMERO_DE_ZONAS];
+                private boolean bicicletaPremiumLibre = true;
+                private final ReentrantLock l = new ReentrantLock();
+                private final Condition colaBicicletaPremium = l.newCondition();
+
+                // Constantes para que no hallan números mágicos
+                private static final int MEJOR_ZONA_POR_DEFECTO = 0;
+                private static final int TIEMPO_INICIAL_POR_ZONA = 0;
+                private static final int ESPACIO_PARA_ZONA_Y_TIEMPOS = 1 + NUMERO_DE_ZONAS;
+                private static final int POSICION_INICIAL_DE_TIEMPOS = 1;
+                private static final Random RANDOM = new Random();
+                private static final int POSICION_DE_ID_DE_ZONA = 0;
+
+                public MonitorZonasGimnasio(){
+                    for (int i = 0; i < NUMERO_DE_ZONAS; i++) {
+                        maquinasPorZonaLibres[i] = MAQUINAS_POR_ZONA;
+                        colasDeZonas[i] = l.newCondition();
+                        tiemposEnZonas[i] = TIEMPO_INICIAL_POR_ZONA;
+                    }
+                }
+
+                /**
+                * Función auxiliar para sacar una zono y todos los tiempos en las zonas en un array.
+                * En caso de haber más de una zona libre se selecciona una aleatoria, si estuvieran
+                * todas ocupadas se elige la que mejor tiempo tenga.
+                * @return array que en la primera posición tiene el ID de la zona elegida
+                * y en el resto de posiciones los tiempos de todas las zonas.
+                */
+                private int[] obtenerZonaYTodosLosTiempos(){
+
+                    int[] zonaElegidaYTiempos = new int[ESPACIO_PARA_ZONA_Y_TIEMPOS];
+                    ArrayList<Integer> zonasConMaquinasLibres = new ArrayList<>();
+                    int zonaLlenaConMejorTiempo = MEJOR_ZONA_POR_DEFECTO;
+                    for(int i = 0; i < NUMERO_DE_ZONAS; i++){
+                        if(maquinasPorZonaLibres[i] > 0){
+                            zonasConMaquinasLibres.add(i);
+                        }
+                        else if(tiemposEnZonas[zonaLlenaConMejorTiempo] > tiemposEnZonas[i]){
+                            zonaLlenaConMejorTiempo = i;
+                        }
+                        zonaElegidaYTiempos[i + POSICION_INICIAL_DE_TIEMPOS] = tiemposEnZonas[i];
+                    }
+                    if(!zonasConMaquinasLibres.isEmpty()){
+                        zonaElegidaYTiempos[POSICION_DE_ID_DE_ZONA] = zonasConMaquinasLibres
+                                .get(RANDOM.nextInt(zonasConMaquinasLibres.size()));
+                    }
+                    else{
+                        zonaElegidaYTiempos[POSICION_DE_ID_DE_ZONA] = zonaLlenaConMejorTiempo;
+                    }
+                    return zonaElegidaYTiempos;
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                /**
+                * Función que se encarga de seleccionar una zona y devolverla junto a los tiempos.
+                * Si estuviera llena nos bloquearíamos hasta que se liberara una máquina.
+                * @param Y es el tiempo que va a estar en la zona quien la pide.
+                * @return posición de zona elegida en el primer elemento del array y el resto son
+                * los tiempos.
+                */
+                public int[] accederAZonaYRecuperarTiempos(int Y) {
+                    l.lock();
+                    try {
+                        int[] idZonaYTiempos = obtenerZonaYTodosLosTiempos();
+                        int idZona = idZonaYTiempos[POSICION_DE_ID_DE_ZONA];
+                        tiemposEnZonas[idZona] += Y;
+
+                        while (maquinasPorZonaLibres[idZona] <= 0) {
+                            try {
+                                colasDeZonas[idZona].await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        maquinasPorZonaLibres[idZona]--;
+
+                        return idZonaYTiempos;
+                    } finally {
+                        l.unlock();
+                    }
+                }
+
+                public void entrarEnBicicletaPremium() {
+                    l.lock();
+                    try {
+                        while (!bicicletaPremiumLibre) {
+                            try {
+                                colaBicicletaPremium.await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        bicicletaPremiumLibre = false;
+                    } finally {
+                        l.unlock();
+                    }
+                }
+
+                public void salirDeBicicletaPremium() {
+                    l.lock();
+                    try {
+                        bicicletaPremiumLibre = true;
+                        colaBicicletaPremium.signal();
+                    } finally {
+                        l.unlock();
+                    }
+                }
+
+                public void salirDeZona(int Y, int idZona) {
+                    l.lock();
+                    try {
+                        maquinasPorZonaLibres[idZona]++;
+                        tiemposEnZonas[idZona] -= Y;
+                        colasDeZonas[idZona].signal();
+                    } finally {
+                        l.unlock();
+                    }
+                }
+            }
+        \end{lstlisting}
+
+        \newpage
+        \begin{lstlisting}[language=Java, title={MonitorPantalla}]
+            package ejercicio3; //NOSONAR
+
+            import java.util.concurrent.locks.Condition;
+            import java.util.concurrent.locks.ReentrantLock;
+
+            @SuppressWarnings("java:S106")
+            public class MonitorPantalla {
+                private final ReentrantLock l = new ReentrantLock();
+                private final Condition colaPantalla = l.newCondition();
+                private boolean pantallaLibre = true;
+                
+                /**
+                * Recibe una cadena de texto y la imprime en exclusión mutua.
+                * @param mensaje es la cadena para imprimir.
+                */
+                public void usarPantalla(String mensaje) {
+                    l.lock();
+                    try {
+                        while (!pantallaLibre) {
+                            try {
+                                colaPantalla.await();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        pantallaLibre = false;
+                        System.out.println(mensaje);
+                        pantallaLibre = true;
+                        colaPantalla.signal();
+                    } finally {
+                        l.unlock();
+                    }
+                }
+            }
         \end{lstlisting}
 
     \newpage
