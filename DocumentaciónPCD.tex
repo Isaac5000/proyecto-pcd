@@ -1806,12 +1806,13 @@
             \SetKwData{DeterminarColaConTiempo}{determinarColaConTiempo}
             \SetKwData{PedirColaRapida}{pedirColaRapida}
             \SetKwData{PedirColaLenta}{pedirColaLenta}
-            \SetKwData{LiberarColaRapida}{liberarColaRapida}
-            \SetKwData{LiberarColaLenta}{liberarColaLenta}
+            \SetKwData{LiberarCola}{liberarCola}
             \SetKwData{PedirPantalla}{pedirPantalla}
-            \SetKwData{LiberarPantalla}{liberarPantalla}
+
+            \SetKwData{TokenPantalla}{TOKEN\_PANTALLA}
 
             \SetKwFunction{Aficionado}{aficionado}
+            \SetKwFunction{Send}{send}
 
             \KwData{\\
                     $\NumeroDeAficionados : Entero$\\
@@ -1821,10 +1822,9 @@
                     $\DeterminarColaConTiempo : Buzon$\\
                     $\PedirColaRapida : Buzon$\\
                     $\PedirColaLenta : Buzon$\\
-                    $\LiberarColaRapida : Buzon$\\
-                    $\LiberarColaLenta : Buzon$\\
+                    $\LiberarCola : Buzon$\\
                     $\PedirPantalla : Buzon$\\
-                    $\LiberarPantalla : Buzon$\\
+                    $\TokenPantalla : Caracter$\\
                     $\ColaRapida : Caracter$\\
                     $\ColaLenta : Caracter$\\
             }
@@ -1833,8 +1833,10 @@
             $\NumeroDeAficionados \leftarrow 50$\;
             $\ColaRapida \leftarrow \text{R}$\;
             $\ColaLenta \leftarrow \text{L}$\;
+            $\TokenPantalla \leftarrow \text{P}$\;
 
             \Fn{main()}{
+                \Send{$\PedirPantalla, \TokenPantalla$}\;
                 \Cobegin{}{
                     \ControladorDeAcceso.iniciar()\;
                     \For{$i \leftarrow 1$ \KwTo $\NumeroDeAficionados$}{
@@ -1866,12 +1868,11 @@
             \SetKwData{DeterminarColaConTiempo}{determinarColaConTiempo}
             \SetKwData{PedirColaRapida}{pedirColaRapida}
             \SetKwData{PedirColaLenta}{pedirColaLenta}
-            \SetKwData{LiberarColaRapida}{liberarColaRapida}
-            \SetKwData{LiberarColaLenta}{liberarColaLenta}
+            \SetKwData{LiberarCola}{liberarCola}
             \SetKwData{PedirPantalla}{pedirPantalla}
-            \SetKwData{LiberarPantalla}{liberarPantalla}
 
             \SetKwData{NumeroDeIteraciones}{NUMERO\_DE\_ITERACIONES}
+            \SetKwData{TokenPantalla}{TOKEN\_PANTALLA}
 
             \SetKwFunction{Send}{send}
             \SetKwFunction{Receive}{receive}
@@ -1894,25 +1895,20 @@
                     $\T \leftarrow \Random{1, 10}$\;
                     \Send{$\DeterminarColaConTiempo, \{idAficionado, T\}$}\;
                     \Receive{$BuzonAficionado, \ColaSeleccionada$}\;
-                    \Switch{\ColaSeleccionada}{
-                        \Case{\ColaRapida}{
+                    \uIf{$\ColaSeleccionada = \ColaRapida$}{
                             \Send{$\PedirColaRapida, \IdAficionado$}\;
-                            \Receive{$\BuzonAficionado, null$}\;
-                            \Sleep{$\T$}\;
-                            \Send{$\LiberarColaRapida$}\;
-                        }
-                        \Case{\ColaLenta}{
-                            \Send{$\PedirColaLenta, \IdAficionado$}\;
-                            \Receive{$\BuzonAficionado, null$}\;
-                            \Sleep{$\T$}\;
-                            \Send{$\LiberarColaLenta$}\;
-                        }
                     }
-                    
-                    \Send{$\PedirPantalla, \IdAficionado$}\;
+                    \Else{
+                            \Send{$\PedirColaLenta, \IdAficionado$}\;
+                    }
                     \Receive{$\BuzonAficionado, null$}\;
+                    \Sleep{$\T$}\;
+                    \Send{$\LiberarCola, \ColaSeleccionada$}\;
+                    
+                    \Receive{$\PedirPantalla, \TokenPantalla$}\;
+
                     \tcp{Imprimir en pantalla}
-                    \Send{$\LiberarPantalla, null$}\;
+                    \Send{\PedirPantalla, \TokenPantalla}\;
                 }
             }
             
@@ -1938,7 +1934,8 @@
 
             \SetKwData{LibreColaRapida}{libreColaRapida}
             \SetKwData{LibreColaLenta}{libreColaLenta}
-            \SetKwData{LibrePantalla}{librePantalla}
+            \SetKwData{LiberarCola}{liberarCola}
+            \SetKwData{ColaSeleccionada}{colaSeleccionada} 
 
             \SetKwFunction{Send}{send}
             \SetKwFunction{Receive}{receive}
@@ -1948,13 +1945,11 @@
             \KwData{\\
                     $\LibreColaRapida : Booleano$\\
                     $\LibreColaLenta : Booleano$\\
-                    $\LibrePantalla : Booleano$\\
             }
             \BlankLine
             \tcp{Inicializar booleanos de guardas}
             $\LibreColaRapida \leftarrow true$\;
             $\LibreColaLenta \leftarrow true$\;
-            $\LibrePantalla \leftarrow true$\;
             \BlankLine
 
             \Fn{iniciar()}{
@@ -1982,24 +1977,14 @@
                         \hspace*{1em}$\LibreColaLenta \leftarrow false$\;
                         \hspace*{1em}$\Send{\BuzonesAficionados[idAficionado], null}$\;
 
-                        or\hspace*{1em}\tcp{Selector para pedir pantalla con guarda}
-                        \hspace*{1em}\When $\LibrePantalla = true  =>$\;
-                        \hspace*{1em}\Receive{$\PedirPantalla, idAficionado$}\;
-                        \hspace*{1em}$\LibrePantalla \leftarrow false$\;
-                        \hspace*{1em}$\Send{\BuzonesAficionados[idAficionado], null}$\;
-
                         or \hspace*{1em}\tcp{Selector para salir de cola rápida}
-                        \hspace*{1em}\Receive{$\LiberarColaRapida$}\;
-                        \hspace*{1em}$\LibreColaRapida \leftarrow true$\;
-                        
-                        or \hspace*{1em}\tcp{Selector para salir de cola lenta}
-                        \hspace*{1em}\Receive{$\LiberarColaLenta$}\;
-                        \hspace*{1em}$\LibreColaLenta \leftarrow true$\;
-                        
-                        or \hspace*{1em}\tcp{Selector para salir de pantalla}
-                        \hspace*{1em}\Receive{$\LiberarPantalla$}\;
-                        \hspace*{1em}$\LibrePantalla \leftarrow true$\;
-                        
+                        \hspace*{1em}\Receive{$\LiberarCola, \ColaSeleccionada$}\;
+                        \hspace*{1em}\uIf{$\ColaSeleccionada = \ColaRapida$}{
+                            $\LibreColaRapida \leftarrow true$\;
+                        }
+                        \hspace*{1em}\uElse{
+                            $\LibreColaLenta \leftarrow true$\;
+                        }
                     }
                 }
             }
@@ -2020,9 +2005,213 @@
         \end{enumerate}
     \newpage
     \subsection{Código Java de los ejercicios comentado}
-        \begin{lstlisting}[language=Java, title={Clase }]
+        \begin{lstlisting}[language=Java, title={Clase Main}]
+            package ejercicio4; //NOSONAR
+
+            import messagepassing.MailBox;
+
+            public class Main {
+                public static final int NUMERO_DE_AFICIONADOS = 50;
+                protected static final Aficionado[] AFICIONADOS = new Aficionado[NUMERO_DE_AFICIONADOS];
+                protected static final MailBox[] buzonesAficionados = new MailBox[NUMERO_DE_AFICIONADOS];
+                public static final MailBox determinarColaConTiempo = new MailBox();
+                public static final MailBox pedirColaRapida = new MailBox();
+                public static final MailBox pedirColaLenta = new MailBox();
+                public static final MailBox liberarCola = new MailBox();
+                public static final MailBox pedirPantalla = new MailBox();
+
+                public static final ControladorDeAcceso CONTROLADOR_DE_ACCESO =
+                        new ControladorDeAcceso(determinarColaConTiempo, pedirColaRapida, pedirColaLenta, 
+                        liberarCola, buzonesAficionados);
+
+                public static final char COLA_RAPIDA = 'R';
+                public static final char COLA_LENTA = 'L';
+                public static final char TOKEN_PANTALLA = 'P';
+
+                public static void main(String[] args) {
+                    pedirPantalla.send(TOKEN_PANTALLA);
+                    CONTROLADOR_DE_ACCESO.start();
+                    for (int i = 0; i < NUMERO_DE_AFICIONADOS; i++) {
+                        buzonesAficionados[i] = new MailBox();
+                        AFICIONADOS[i] = new Aficionado(i, buzonesAficionados[i], determinarColaConTiempo, 
+                        pedirColaRapida, pedirColaLenta, liberarCola, pedirPantalla);
+                        AFICIONADOS[i].start();
+                    }
+                    for (int i = 0; i < NUMERO_DE_AFICIONADOS; i++) {
+                        try {
+                            AFICIONADOS[i].join();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                }
+            }
 
         \end{lstlisting}
 
+        \newpage
+        \begin{lstlisting}[language=Java, title={Clase Aficionado}]
+            package ejercicio4; //NOSONAR
 
+            import messagepassing.MailBox;
+
+            import java.util.Random;
+
+            public class Aficionado extends Thread {
+                public static final int NUMERO_ITERACIONES = 5;
+                public static final int CAMINAR_A_BANOS = 5;
+                public static final int TIEMPO_MINIMO = 1;
+                public static final int TIEMPO_MAXIMO_TORNO = 10;
+                private static final Random RANDOM = new Random();
+
+                private final int idAficionado;
+                private final MailBox buzonAficionado;
+                private final MailBox determinarColaConTiempo;
+                private final MailBox pedirColaRapida;
+                private final MailBox pedirColaLenta;
+                private final MailBox liberarCola;
+                private final MailBox pedirPantalla;
+
+                public Aficionado(int idAficionado,
+                                MailBox buzonAficionado,
+                                MailBox determinarColaConTiempo,
+                                MailBox pedirColaRapida,
+                                MailBox pedirColaLenta,
+                                MailBox liberarCola,
+                                MailBox pedirPantalla) {
+                    this.idAficionado = idAficionado;
+                    this.buzonAficionado = buzonAficionado;
+                    this.determinarColaConTiempo = determinarColaConTiempo;
+                    this.pedirColaRapida = pedirColaRapida;
+                    this.pedirColaLenta = pedirColaLenta;
+                    this.liberarCola = liberarCola;
+                    this.pedirPantalla = pedirPantalla;
+                }
+
+                @Override
+                public void run() {
+                    int T = 0;
+                    int tiempoParaIrABano = 0;
+                    for(int i = 0; i < NUMERO_ITERACIONES; i++) {
+                        tiempoParaIrABano = RANDOM.nextInt(CAMINAR_A_BANOS) + TIEMPO_MINIMO;
+                        try {
+                            Thread.sleep(tiempoParaIrABano);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                        T = RANDOM.nextInt(TIEMPO_MAXIMO_TORNO) + TIEMPO_MINIMO;
+                        int[] tuplaIDTiempo = new int[]{idAficionado, T};
+                        determinarColaConTiempo.send(tuplaIDTiempo);
+                        char colaSeleccionada = (char) buzonAficionado.receive();
+
+                        if (colaSeleccionada == Main.COLA_RAPIDA) {
+                            pedirColaRapida.send(idAficionado);
+                        } else {
+                            pedirColaLenta.send(idAficionado);
+                        }
+
+                        buzonAficionado.receive();
+                        try{
+                            Thread.sleep(T);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                        liberarCola.send(colaSeleccionada);
+                        pedirPantalla.receive();
+                        System.out.println("Aficionado " + idAficionado + " ha usado la cola " 
+                        + colaSeleccionada + "\n"
+                        + "Tiempo de validación = " + T + "\n"
+                        + "Thread.sleep(" + T + ")\n"
+                        + "Aficionado " + idAficionado + " liberando la cola " + colaSeleccionada);
+                        pedirPantalla.send(Main.TOKEN_PANTALLA);
+                    }
+                }
+
+            }
+        \end{lstlisting}
+        
+        \begin{lstlisting}[language=Java, title={Clase ControladorDeAcceso}]
+            package ejercicio4; //NOSONAR
+
+            import messagepassing.MailBox;
+            import messagepassing.Selector;
+
+            public class ControladorDeAcceso extends Thread {
+                private static final int TIEMPO_MAXIMO_COLA_RAPIDA = 5;
+                private static final int POSICION_ID_CLIENTE = 0;
+                private static final int POSICION_TIEMPO_CLIENTE = 1;
+                private static final String CADENA_VACIA = "";
+                private boolean libreColaRapida = true;
+                private boolean libreColaLenta = true;
+
+                private final Selector selector = new Selector();
+
+                private final MailBox determinarColaConTiempo;
+                private final MailBox pedirColaRapida;
+                private final MailBox pedirColaLenta;
+                private final MailBox liberarCola;
+
+                private final MailBox[] buzonesAficionados;
+
+                public ControladorDeAcceso(MailBox determinarColaConTiempo,
+                                        MailBox pedirColaRapida,
+                                        MailBox pedirColaLenta,
+                                        MailBox liberarCola,
+                                        MailBox[]  buzonesAficionados) {
+                    this.determinarColaConTiempo = determinarColaConTiempo;
+                    this.pedirColaRapida = pedirColaRapida;
+                    this.pedirColaLenta = pedirColaLenta;
+                    this.liberarCola = liberarCola;
+                    this.buzonesAficionados = buzonesAficionados;
+
+                    selector.addSelectable(determinarColaConTiempo, false);
+                    selector.addSelectable(pedirColaRapida, false);
+                    selector.addSelectable(pedirColaLenta, false);
+                    selector.addSelectable(liberarCola, false);
+
+                    pedirColaRapida.setGuardValue(libreColaRapida);
+                    pedirColaLenta.setGuardValue(libreColaLenta);
+                }
+
+                @Override
+                public void run() {
+                    // for(int i = 0; i < 50*3*5; i++){
+                    while (true) {
+                        switch (selector.selectOrBlock()){
+                            case 1:{ // Selector para pedir cola
+                                int[] tuplaIDTiempo = (int[]) determinarColaConTiempo.receive();
+                                int id = tuplaIDTiempo[POSICION_ID_CLIENTE];
+                                int tiempo = tuplaIDTiempo[POSICION_TIEMPO_CLIENTE];
+                                if(tiempo <= TIEMPO_MAXIMO_COLA_RAPIDA)
+                                    buzonesAficionados[id].send(Main.COLA_RAPIDA);
+                                else
+                                    buzonesAficionados[id].send(Main.COLA_LENTA);
+                                break;
+                            }
+                            case 2: { // Pedir cola rápida
+                                int id = (int) pedirColaRapida.receive();
+                                libreColaRapida = false;
+                                buzonesAficionados[id].send(CADENA_VACIA);
+                                break;
+                            }
+                            case 3:{ // Pedir cola lenta
+                                int id = (int) pedirColaLenta.receive();
+                                libreColaLenta = false;
+                                buzonesAficionados[id].send(CADENA_VACIA);
+                                break;
+                            }
+                            case 4: { // Liberar cola
+                                char colaSeleccionada = (char) liberarCola.receive();
+                                if (colaSeleccionada == Main.COLA_RAPIDA) {
+                                    libreColaRapida = true;
+                                } else {
+                                    libreColaLenta = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        \end{lstlisting}
 \end{document}
