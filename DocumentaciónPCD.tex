@@ -51,10 +51,10 @@
 
 % Configuración del encabezado
 \pagestyle{fancy}
-\fancyhf{}                                                                      % Borra cabecera y pie actuales  
-\fancyhead[R]{Programación concurrente y distribuida. Convocatoria 2025-2026}   % Texto a la derecha
-\fancyfoot[C]{\thepage}                                                         % Número de página en el centro del pie
-\renewcommand{\headrulewidth}{0.4pt}                                            % Línea decorativa bajo el encabezado
+\fancyhf{}                                                                              % Borra cabecera y pie actuales  
+\fancyhead[R]{Programación concurrente y distribuida. Convocatoria de junio 2025-2026}  % Texto a la derecha
+\fancyfoot[C]{\thepage}                                                                 % Número de página en el centro del pie
+\renewcommand{\headrulewidth}{0.4pt}                                                    % Línea decorativa bajo el encabezado
 
 
 
@@ -70,9 +70,9 @@
             \textbf{Nombre:} & Isaac \\
             \textbf{Asignatura:} & PCD \\
             \textbf{Grupo:} & 2 \quad \textbf{Subgrupo:} 3 \\
-            \textbf{Convocatoria:} & \\
+            \textbf{Convocatoria:} & Junio \\
             \textbf{Año académico:} & 2025--2026 \\
-            \textbf{Profesor:} & Adrián Cánovas Rodríguez \\
+            \textbf{Profesor:} & Cánovas Rodríguez, Adrián \\
         \end{tabular}
     \end{flushright}
 
@@ -2000,8 +2000,11 @@
             estén libres. Por lo que uno puede estar usando el lento hacer un \textbf{sleep} y mientras estar otro
             en el rápido haciendo lo mismo.
             \item \textbf{(0.5 puntos sobre 10) ¿Cómo has resuelto la exclusión mutua de la pantalla?}\\
-            Con la asignación de esta por medio del conrolador y de una condición de guarda, evitando 
-            así que más de un proceso pueda acceder a ella a la vez.
+            Para resolver esto he usado un buzón que contiene un \textbf{TOKEN\_PANTALLA} al inicio del código, 
+            este actúa como un semaforo binario otorgando acceso a la pantalla a un solo proceso a la vez. El 
+            proceso que use el \textbf{receive} para pedir el token debe esperar a que este este en el buzón para 
+            poder cogerlo y asi usar la pantalla el solo hasta que lo deje de nuevo en el buzón cuando termine de usar 
+            la pantalla.
         \end{enumerate}
     \newpage
     \subsection{Código Java de los ejercicios comentado}

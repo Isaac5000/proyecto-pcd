@@ -36,5 +36,11 @@ public class Main {
                 Thread.currentThread().interrupt();
             }
         }
+
+        try {
+            CONTROLADOR_DE_ACCESO.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
