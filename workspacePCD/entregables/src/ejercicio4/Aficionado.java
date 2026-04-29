@@ -11,6 +11,8 @@ public class Aficionado extends Thread {
     public static final int TIEMPO_MAXIMO_TORNO = 10;
     private static final Random RANDOM = new Random();
 
+    public static final int PETICIONES_POR_HILO_A_CONTROLADOR = 3;
+
     private final int idAficionado;
     private final MailBox buzonAficionado;
     private final MailBox determinarColaConTiempo;
@@ -68,7 +70,7 @@ public class Aficionado extends Thread {
             System.out.println("“Aficionado " + idAficionado + " ha usado la cola " + colaSeleccionada + "\n"
             + "Tiempo de validación = " + T + "\n"
             + "Thread.sleep(" + T + ")\n"
-            + "Aficionado " + idAficionado + " liberando la cola " + colaSeleccionada  + "”" );
+            + "Aficionado " + idAficionado + " liberando la cola " + colaSeleccionada  + "”\n" );
             pedirPantalla.send(Main.TOKEN_PANTALLA);
         }
     }

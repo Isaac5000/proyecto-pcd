@@ -43,7 +43,9 @@ public class Main {
 			cuadrado.join();
 			suma.join();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
+
+		System.out.println("Fin del hilo principal."); //NOSONAR
 	}
 }

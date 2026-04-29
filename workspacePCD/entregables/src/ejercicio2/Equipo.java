@@ -86,14 +86,14 @@ public class Equipo extends Thread{
 				try {
 					Main.SEMAFORO_DE_PANELES.acquire();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 	    		// Bloqueo el acceso a la varible que puede ser usada por más de un proceso a la vez para
 	    		// lectura y escritura, por un semáforo binario.
 				try {
 					Main.MUTEX_VARIABLES_COMPARTIDAS.acquire();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 
 	    		// Llegado este punto hay un panel libre asegurado por lo que uso un while para encontrar uno.
@@ -105,7 +105,7 @@ public class Equipo extends Thread{
 	    		// Dejo libre el semáforo binario
 	    		Main.MUTEX_VARIABLES_COMPARTIDAS.release();
 	    		
-	    		String mensajeParaPanel = ("Usando panel " + idPanel + " el hilo (equipo) " + idPanel + "\n\n"
+	    		String mensajeParaPanel = ("Usando panel " + idPanel + " el hilo (equipo) " + idEquipo + "\n\n"
 	    				+ "Matriz R (Resumen del equipo " + idEquipo + ": mejores marcas) =\n"
 						+ matrizToString(matrizResumenR) + "\n"
 	    				+ "Terminando de usar panel " + idPanel + " el hilo (equipo) " + idEquipo + "\n");
@@ -115,7 +115,7 @@ public class Equipo extends Thread{
 				try {
 					Main.MUTEX_VARIABLES_COMPARTIDAS.acquire();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 				Main.PANELES_LIBRES[idPanel] = true;
 				Main.MUTEX_VARIABLES_COMPARTIDAS.release();

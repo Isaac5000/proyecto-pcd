@@ -42,5 +42,7 @@ public class Main {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+
+        System.out.println("Fin del hilo principal."); //NOSONAR
     }
 }

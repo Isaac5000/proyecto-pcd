@@ -52,7 +52,7 @@ public class MonitorTornos {
 				try {
 					colasDeTornos[idTornoSeleccionado].await();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					Thread.currentThread().interrupt();
 				}
 			}
 			tornosLibres[idTornoSeleccionado] = false;

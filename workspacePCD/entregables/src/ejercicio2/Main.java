@@ -59,9 +59,11 @@ public class Main {
 			try {
 				EQUIPOS[numEquipo].join();
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				Thread.currentThread().interrupt();
 			}
 		}
+
+		System.out.println("Fin del hilo principal."); //NOSONAR
 	}
 
 }

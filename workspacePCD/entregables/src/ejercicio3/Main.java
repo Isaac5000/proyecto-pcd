@@ -21,10 +21,11 @@ public class Main {
 			try {
 				cliente.join();
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				Thread.currentThread().interrupt();
 			}
 		}
-		
+
+		System.out.println("Fin del hilo principal."); //NOSONAR
 	}
 	
 }

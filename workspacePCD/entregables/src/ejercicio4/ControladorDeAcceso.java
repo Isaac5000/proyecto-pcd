@@ -8,16 +8,16 @@ public class ControladorDeAcceso extends Thread {
     private static final int POSICION_ID_CLIENTE = 0;
     private static final int POSICION_TIEMPO_CLIENTE = 1;
     private static final String CADENA_VACIA = "";
+    private static final int ITERACIONES_DEL_CONTROLADOR = Main.NUMERO_DE_AFICIONADOS *
+            Aficionado.NUMERO_ITERACIONES * Aficionado.PETICIONES_POR_HILO_A_CONTROLADOR;
     private boolean libreColaRapida = true;
     private boolean libreColaLenta = true;
 
     private final Selector selector = new Selector();
-
     private final MailBox determinarColaConTiempo;
     private final MailBox pedirColaRapida;
     private final MailBox pedirColaLenta;
     private final MailBox liberarCola;
-
     private final MailBox[] buzonesAficionados;
 
     public ControladorDeAcceso(MailBox determinarColaConTiempo,
@@ -42,8 +42,7 @@ public class ControladorDeAcceso extends Thread {
 
     @Override
     public void run() {
-        // for(int i = 0; i < 50*3*5; i++){
-        while (true) {
+        for(int i = 0; i < ITERACIONES_DEL_CONTROLADOR; i++) {
             switch (selector.selectOrBlock()){
                 case 1:{ // Selector para pedir cola
                     int[] tuplaIDTiempo = (int[]) determinarColaConTiempo.receive();

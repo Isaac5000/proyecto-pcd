@@ -318,8 +318,10 @@
                         cuadrado.join();
                         suma.join();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.currentThread().interrupt();;
                     }
+
+                    System.out.println("Fin del hilo principal."); //NOSONAR
                 }
             }
 
@@ -773,9 +775,11 @@
                         try {
                             EQUIPOS[numEquipo].join();
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            Thread.currentThread().interrupt();;
                         }
                     }
+
+                    System.out.println("Fin del hilo principal."); //NOSONAR
                 }
 
             }
@@ -892,14 +896,14 @@
                             try {
                                 Main.SEMAFORO_DE_PANELES.acquire();
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Thread.currentThread().interrupt();
                             }
                             // Bloqueo el acceso a la varible que puede ser usada por más de un proceso a la 
                             // vez para lectura y escritura, por un semáforo binario. 
                             try {
                                 Main.MUTEX_VARIABLES_COMPARTIDAS.acquire();
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Thread.currentThread().interrupt();
                             }
 
                             // Llegado este punto hay un panel libre asegurado por lo que uso un while para 
@@ -913,7 +917,7 @@
                             Main.MUTEX_VARIABLES_COMPARTIDAS.release();
                             
                             String mensajeParaPanel = ("Usando panel " + idPanel + " el hilo (equipo) " 
-                                    + idPanel + "\n\n" + "Matriz R (Resumen del equipo " + idEquipo 
+                                    + idEquipo + "\n\n" + "Matriz R (Resumen del equipo " + idEquipo 
                                     + ": mejores marcas) =\n" + matrizToString(matrizResumenR) + "\n"
                                     + "Terminando de usar panel " + idPanel + " el hilo (equipo) " 
                                     + idEquipo + "\n");
@@ -923,7 +927,7 @@
                             try {
                                 Main.MUTEX_VARIABLES_COMPARTIDAS.acquire();
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Thread.currentThread().interrupt();
                             }
                             Main.PANELES_LIBRES[idPanel] = true;
                             Main.MUTEX_VARIABLES_COMPARTIDAS.release();
@@ -1367,10 +1371,11 @@
                         try {
                             cliente.join();
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            Thread.currentThread().interrupt();
                         }
                     }
                     
+                    System.out.println("Fin del hilo principal."); //NOSONAR
                 }
                 
             }
@@ -1410,7 +1415,7 @@
                     try {
                         Thread.sleep(X);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
                     }
                     Main.MONITOR_TORNOS.salirDeTorno(X, idTorno);
                     int[] idZonaYTiempos = Main.MONITOR_ZONAS_GIMNASIO.accederAZonaYRecuperarTiempos(Y);
@@ -1440,7 +1445,7 @@
                     try {
                         Thread.sleep(Y);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
                     }
                     if(usarBicicletaPremium) {
                         Main.MONITOR_ZONAS_GIMNASIO.salirDeBicicletaPremium();
@@ -1507,7 +1512,7 @@
                             try {
                                 colasDeTornos[idTornoSeleccionado].await();
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Thread.currentThread().interrupt();
                             }
                         }
                         tornosLibres[idTornoSeleccionado] = false;
@@ -1634,7 +1639,7 @@
                             try {
                                 colasDeZonas[idZona].await();
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Thread.currentThread().interrupt();
                             }
                         }
 
@@ -1653,7 +1658,7 @@
                             try {
                                 colaBicicletaPremium.await();
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Thread.currentThread().interrupt();
                             }
                         }
                         bicicletaPremiumLibre = false;
@@ -1709,7 +1714,7 @@
                             try {
                                 colaPantalla.await();
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Thread.currentThread().interrupt();
                             }
                         }
                         pantallaLibre = false;
@@ -2047,6 +2052,8 @@
                             Thread.currentThread().interrupt();
                         }
                     }
+
+                    System.out.println("Fin del hilo principal."); //NOSONAR
                 }
             }
 
@@ -2066,6 +2073,8 @@
                 public static final int TIEMPO_MINIMO = 1;
                 public static final int TIEMPO_MAXIMO_TORNO = 10;
                 private static final Random RANDOM = new Random();
+
+                public static final int PETICIONES_POR_HILO_A_CONTROLADOR = 3;
 
                 private final int idAficionado;
                 private final MailBox buzonAficionado;
@@ -2125,7 +2134,7 @@
                         + colaSeleccionada + "\n"
                         + "Tiempo de validación = " + T + "\n"
                         + "Thread.sleep(" + T + ")\n"
-                        + "Aficionado " + idAficionado + " liberando la cola " + colaSeleccionada);
+                        + "Aficionado " + idAficionado + " liberando la cola " + colaSeleccionada "\n");
                         pedirPantalla.send(Main.TOKEN_PANTALLA);
                     }
                 }
@@ -2144,6 +2153,8 @@
                 private static final int POSICION_ID_CLIENTE = 0;
                 private static final int POSICION_TIEMPO_CLIENTE = 1;
                 private static final String CADENA_VACIA = "";
+                private static final int ITERACIONES_DEL_CONTROLADOR = Main.NUMERO_DE_AFICIONADOS *
+                    Aficionado.NUMERO_ITERACIONES * Aficionado.PETICIONES_POR_HILO_A_CONTROLADOR;
                 private boolean libreColaRapida = true;
                 private boolean libreColaLenta = true;
 
@@ -2153,7 +2164,6 @@
                 private final MailBox pedirColaRapida;
                 private final MailBox pedirColaLenta;
                 private final MailBox liberarCola;
-
                 private final MailBox[] buzonesAficionados;
 
                 public ControladorDeAcceso(MailBox determinarColaConTiempo,
@@ -2178,8 +2188,7 @@
 
                 @Override
                 public void run() {
-                    // for(int i = 0; i < 50*3*5; i++){
-                    while (true) {
+                    for(int i = 0; i < ITERACIONES_DEL_CONTROLADOR; i++) {
                         switch (selector.selectOrBlock()){
                             case 1:{ // Selector para pedir cola
                                 int[] tuplaIDTiempo = (int[]) determinarColaConTiempo.receive();

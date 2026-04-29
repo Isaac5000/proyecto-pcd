@@ -30,7 +30,7 @@ public class Cliente extends Thread {
 		try {
 			Thread.sleep(X);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
 		Main.MONITOR_TORNOS.salirDeTorno(X, idTorno);
 		int[] idZonaYTiempos = Main.MONITOR_ZONAS_GIMNASIO.accederAZonaYRecuperarTiempos(Y);
@@ -60,7 +60,7 @@ public class Cliente extends Thread {
 		try {
 			Thread.sleep(Y);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
 		if(usarBicicletaPremium) {
 			Main.MONITOR_ZONAS_GIMNASIO.salirDeBicicletaPremium();
