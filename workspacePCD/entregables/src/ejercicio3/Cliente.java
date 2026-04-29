@@ -6,6 +6,7 @@ public class Cliente extends Thread {
 	
 	private final int idCliente;
 	private static final Random RANDOM = new Random();
+	private static final int EMPEZAR_EN_UNO = 1;
 	private int X = RANDOM.nextInt(Main.TIEMPO_MAX_DE_X_TORNO) + Main.TIEMPO_MIN;
 	private int Y = RANDOM.nextInt(Main.TIEMPO_MAX_DE_Y_ZONA) + Main.TIEMPO_MIN;
 	private boolean usarBicicletaPremium = false;
@@ -46,7 +47,7 @@ public class Cliente extends Thread {
 				+ "Cliente " + this.idCliente + " ha pasado por el torno: " + idTorno
 				+ "\n"
 				+ "Tiempo en el torno (acceso): " + this.X + "\n"
-				+ "Zona elegida: " + idZona + "\n"
+				+ "Zona elegida: " + (idZona+EMPEZAR_EN_UNO) + "\n"
 				+ "Tiempo de entrenamiento: " + this.Y + "\n"
 				+ "Estimación de espera (sin incluirse a sí mismo):\n"
 				+ "  Zona1(Cardio)=" + idZonaYTiempos[CARDIO]

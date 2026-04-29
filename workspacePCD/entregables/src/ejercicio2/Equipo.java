@@ -89,7 +89,7 @@ public class Equipo extends Thread{
 					Thread.currentThread().interrupt();
 				}
 	    		// Bloqueo el acceso a la varible que puede ser usada por más de un proceso a la vez para
-	    		// lectura y escritura, por un semáforo binario.
+	    		// lectura y escritura, con un semáforo binario.
 				try {
 					Main.MUTEX_VARIABLES_COMPARTIDAS.acquire();
 				} catch (InterruptedException e) {
